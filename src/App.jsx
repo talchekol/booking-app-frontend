@@ -1,122 +1,155 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from "react";
+import LoginSMS from "./components/LoginSMS/LoginSMS";
+import Home from "./components/Home/Home";
+import SelectService from "./components/SelectService/SelectService";
+import SelectBarber from "./components/SelectBarber/SelectBarber";
+import SelectDateTime from "./components/SelectDateTime/SelectDateTime";
+import ConfirmScreen from "./components/ConfirmScreen/ConfirmScreen";
+import { CheckCircle2 } from "lucide-react";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [user, setUser] = useState(null);
+
+  // ניהול השלב הנוכחי בתהליך קביעת התור
+  // 'home' | 'select-service' | 'select-barber' | 'select-datetime' | 'confirm'
+  const [bookingStep, setBookingStep] = useState("home");
+  const [selectedBookingData, setSelectedBookingData] = useState({});
+  const [upcomingAppointment, setUpcomingAppointment] = useState(null);
+
+  // בדיקה בזמן טעינת הדף אם המשתמש כבר מחובר
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+
+  // בחירת שירות ומעבר לשלב הבא
+  const handleSelectService = (service) => {
+    setSelectedBookingData((prev) => ({ ...prev, service }));
+    setBookingStep("select-barber"); // יעבור למסך בחירת ספר!
+    console.log("נבחר שירות:", service);
+  };
+
+  // 2. שמירת ספר ומעבר לבחירת תאריך ושעה
+  const handleSelectBarber = (barber) => {
+    setSelectedBookingData((prev) => ({ ...prev, barber }));
+    setBookingStep("select-datetime");
+    console.log("נתוני ההזמנה עד כה:", { ...selectedBookingData, barber });
+  };
+
+  // 3. שמירת תאריך ושעה ומעבר למסך אישור פרטים
+  const handleSelectDateTime = ({ date, time, dayName }) => {
+    setSelectedBookingData((prev) => ({ ...prev, date, time, dayName }));
+    setBookingStep("confirm"); // מעבר למסך אישור פרטים!
+    console.log("נתוני הזמנה מלאים:", {
+      ...selectedBookingData,
+      date,
+      time,
+      dayName,
+    });
+  };
+
+  // 4. טיפול באישור סופי של ההזמנה
+  const handleFinalConfirm = (finalData) => {
+    console.log("נתוני ההזמנה המלאים שנשלחו:", finalData);
+    // בונים את אובייקט התור המעודכן
+    const newAppointment = {
+      service: finalData.service?.name || "תספורת",
+      barber: finalData.barber?.name || "ספר",
+      date: finalData.date,
+      time: finalData.time,
+      imageUrl:
+        finalData.barber?.imageUrl ||
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    };
+
+    // שמירה ב-State וב-localStorage
+    setUpcomingAppointment(newAppointment);
+    localStorage.setItem("upcomingAppointment", JSON.stringify(newAppointment));
+
+    setBookingStep("success");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div>
+      {!user ? (
+        <LoginSMS onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />
+      ) : (
+        <>
+          {/* שלב 1: דף הבית */}
+          {bookingStep === "home" && (
+            <Home
+              user={user}
+              onStartBooking={() => setBookingStep("select-service")}
+              upcomingAppt={upcomingAppointment}
+            />
+          )}
 
-      <div className="ticks"></div>
+          {/* שלב 2: בחירת שירות */}
+          {bookingStep === "select-service" && (
+            <SelectService
+              onSelectService={handleSelectService}
+              onBack={() => setBookingStep("home")}
+            />
+          )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* שלב 3: בחירת ספר */}
+          {bookingStep === "select-barber" && (
+            <SelectBarber
+              onSelectBarber={handleSelectBarber}
+              onBack={() => setBookingStep("select-service")}
+            />
+          )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {/* 👈 שלב 4: בחירת תאריך ושעה */}
+          {bookingStep === "select-datetime" && (
+            <SelectDateTime
+              onSelectDateTime={handleSelectDateTime}
+              onBack={() => setBookingStep("select-barber")}
+            />
+          )}
+
+          {/* שלב 5: מסך אישור כללי */}
+          {bookingStep === "confirm" && (
+            <ConfirmScreen
+              type="booking"
+              title="אישור פרטי תור"
+              data={selectedBookingData}
+              onConfirm={handleFinalConfirm}
+              onBack={() => setBookingStep("select-datetime")}
+            />
+          )}
+
+          {bookingStep === "success" && (
+            <div className="success-screen-container">
+              <CheckCircle2 size={80} className="success-icon" />
+              <h1 className="success-title">התור נקבע בהצלחה!</h1>
+              <p className="success-description">
+                נשלח אליך אישור והתראה לפני התור.
+              </p>
+
+              <button
+                onClick={() => setBookingStep("home")}
+                className="cta-button"
+              >
+                חזור לדף הבית
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
-
-export default App

@@ -1,0 +1,169 @@
+.select-datetime-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px 16px 90px 16px;
+  direction: rtl;
+  max-width: 450px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* הדר עליון */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.screen-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.header-placeholder {
+  width: 40px;
+}
+
+/* כותרות משנה */
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+/* סרגל בחירת תאריכים אופקי */
+.date-picker-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  scrollbar-width: none;
+}
+
+.date-card {
+  min-width: 62px;
+  padding: 12px 8px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-card.selected {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(109, 40, 217, 0.25);
+}
+
+.date-day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.date-card.selected .date-day-name {
+  color: #e9d5ff;
+}
+
+.date-number {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.date-card.selected .date-number {
+  color: #ffffff;
+}
+
+/* גריד שעות פנויות */
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.time-slot-btn {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-slot-btn:hover {
+  border-color: #c084fc;
+  background-color: #faf5ff;
+}
+
+.time-slot-btn.selected {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+}
+
+/* כפתור אישור תחתי */
+.submit-btn {
+  width: 100%;
+  background-color: #6d28d9;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.3);
+  transition:
+    transform 0.2s,
+    background-color 0.2s,
+    opacity 0.2s;
+}
+
+.submit-btn:disabled {
+  background-color: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.submit-btn:not(:disabled):active {
+  transform: scale(0.98);
+}

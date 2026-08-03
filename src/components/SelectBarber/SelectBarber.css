@@ -1,0 +1,137 @@
+.select-barber-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px 16px 90px 16px;
+  direction: rtl;
+  max-width: 450px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* הדר עליון */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.screen-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.header-placeholder {
+  width: 40px;
+}
+
+/* רשימת ספרים */
+.barbers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* כרטיסיית ספר */
+.barber-card {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.barber-card:hover {
+  border-color: #c084fc;
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.08);
+}
+
+.barber-card:active {
+  transform: scale(0.98);
+}
+
+.barber-main-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.barber-avatar-wrapper {
+  position: relative;
+}
+
+.barber-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.any-barber-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background-color: #f3e8ff;
+  color: #6d28d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barber-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.barber-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.barber-title {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.barber-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.arrow-icon {
+  color: #cbd5e1;
+}

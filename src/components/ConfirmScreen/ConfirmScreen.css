@@ -1,0 +1,197 @@
+.confirm-screen-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px 16px 90px 16px;
+  direction: rtl;
+  max-width: 450px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* הדר עליון */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.screen-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.header-placeholder {
+  width: 40px;
+}
+
+/* כרטיסיית סיכום כללית */
+.summary-card {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: #f3e8ff;
+  color: #6d28d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-label {
+  font-size: 0.775rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.summary-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #6d28d9;
+}
+
+.summary-divider {
+  height: 1px;
+  background-color: #f1f5f9;
+}
+
+/* עיצוב מיוחד למצב החלפת תור (Swap) */
+.swap-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.swap-box {
+  padding: 14px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.swap-box.current {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.swap-box.target {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.swap-arrow-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6d28d9;
+  font-weight: 800;
+}
+
+/* שדה הערות לבעל העסק */
+.notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.notes-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.notes-textarea {
+  width: 100%;
+  height: 80px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  outline: none;
+  resize: none;
+  background-color: #ffffff;
+}
+
+.notes-textarea:focus {
+  border-color: #6d28d9;
+}
+
+/* כפתור אישור סופי */
+.confirm-btn {
+  width: 100%;
+  background-color: #6d28d9;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.3);
+  transition: transform 0.2s;
+}
+
+.confirm-btn:active {
+  transform: scale(0.98);
+}
