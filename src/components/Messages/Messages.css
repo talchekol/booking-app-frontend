@@ -1,0 +1,140 @@
+.messages-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px 16px 90px 16px;
+  direction: rtl;
+  max-width: 450px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.messages-header {
+  margin-bottom: 20px;
+}
+
+.messages-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* סרגל לשוניות */
+.messages-tabs-bar {
+  display: flex;
+  background-color: #e2e8f0;
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.messages-tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.messages-tab-btn.active {
+  background-color: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* רשימת הודעות */
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-card {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.message-card.unread {
+  border-right: 4px solid #6d28d9;
+  background-color: #faf5ff;
+}
+
+.message-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message-icon-wrapper.swap {
+  background-color: #f3e8ff;
+  color: #6d28d9;
+}
+
+.message-icon-wrapper.system {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.message-icon-wrapper.broadcast {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.message-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.message-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message-item-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.message-text {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.no-messages {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 0;
+  font-size: 0.9rem;
+}

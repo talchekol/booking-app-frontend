@@ -5,7 +5,18 @@ import SelectService from "./components/SelectService/SelectService";
 import SelectBarber from "./components/SelectBarber/SelectBarber";
 import SelectDateTime from "./components/SelectDateTime/SelectDateTime";
 import ConfirmScreen from "./components/ConfirmScreen/ConfirmScreen";
-import { CheckCircle2 } from "lucide-react";
+import Swaps from "./components/Swaps/Swaps";
+import Messages from "./components/Messages/Messages";
+import MyAppointments from "./components/MyAppointments/MyAppointments";
+import Profile from "./components/Profile/Profile";
+import {
+  CheckCircle2,
+  HomeIcon,
+  Calendar,
+  Repeat,
+  MessageSquare,
+  User,
+} from "lucide-react";
 import "./App.css";
 
 export default function App() {
@@ -13,11 +24,28 @@ export default function App() {
 
   // ניהול השלב הנוכחי בתהליך קביעת התור
   // 'home' | 'select-service' | 'select-barber' | 'select-datetime' | 'confirm'
+  const [currentTab, setCurrentTab] = useState("home");
   const [bookingStep, setBookingStep] = useState("home");
   const [selectedBookingData, setSelectedBookingData] = useState({});
-  const [upcomingAppointment, setUpcomingAppointment] = useState(null);
+  // 👈 שמירת מזהה הצעת ההחלפה הממתינה
+  const [pendingSwapId, setPendingSwapId] = useState(() => {
+  try {
+    return localStorage.getItem("pendingSwapId") || null;
+  } catch (e) {
+    return null;
+  }
+});
 
-  // בדיקה בזמן טעינת הדף אם המשתמש כבר מחובר
+  //שומר את התור הקרוב ב-state וב-localStorage
+  const [upcomingAppointment, setUpcomingAppointment] = useState(() => {
+    try {
+      const savedAppt = localStorage.getItem("upcomingAppointment");
+      return savedAppt ? JSON.parse(savedAppt) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -76,6 +104,51 @@ export default function App() {
     setBookingStep("success");
   };
 
+  // 👈 פונקציה לביטול התור
+  const handleCancelAppointment = () => {
+    setUpcomingAppointment(null);
+    localStorage.removeItem("upcomingAppointment");
+  };
+
+  // 👈 פונקציה שמחליפה את מצב ההצעה להחלפה (Toggle)
+  const handleToggleSwapOffer = () => {
+    if (!upcomingAppointment) return;
+
+    const updatedAppt = {
+      ...upcomingAppointment,
+      isUpForSwap: !upcomingAppointment.isUpForSwap,
+    };
+
+    setUpcomingAppointment(updatedAppt);
+    localStorage.setItem("upcomingAppointment", JSON.stringify(updatedAppt));
+  };
+
+  // 👈 בקשת החלפת תור מול משתמש אחר
+  const handleRequestSwap = (targetAppt) => {
+    setSelectedBookingData({
+      myAppt: upcomingAppointment,
+      targetAppt: targetAppt,
+      otherUserName: targetAppt.userName,
+      targetId: targetAppt.id,
+    });
+    setBookingStep("confirm-swap");
+  };
+
+  // 👈 2. סיום תהליך אישור ההחלפה
+  const handleConfirmSwapFinal = (confirmedData) => {
+  // חילוץ ה-targetId שנשמר ב-data
+  const targetId = confirmedData?.targetId || confirmedData?.targetAppt?.id;
+
+  if (targetId) {
+    setPendingSwapId(targetId);
+    localStorage.setItem("pendingSwapId", String(targetId)); // שמירה ב-localStorage
+  }
+
+  setBookingStep("home");
+  setCurrentTab("swaps");
+};
+
+  //פונקציית התנתקות
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -88,14 +161,51 @@ export default function App() {
         <LoginSMS onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />
       ) : (
         <>
-          {/* שלב 1: דף הבית */}
+          {/* תצוגת דף הבית */}
           {bookingStep === "home" && (
+            <>
+           { currentTab === "home" && (
             <Home
               user={user}
-              onStartBooking={() => setBookingStep("select-service")}
               upcomingAppt={upcomingAppointment}
+              onStartBooking={() => setBookingStep("select-service")}
+              onCancelAppointment={handleCancelAppointment}
+              onToggleSwapOffer={handleToggleSwapOffer}
             />
           )}
+
+          {/* 👈 חיבור בלוק "התורים שלי" */}
+         {currentTab === "my-appts" && (
+          <MyAppointments
+             upcomingAppt={upcomingAppointment}
+             onCancelAppointment={handleCancelAppointment}
+             onToggleSwapOffer={handleToggleSwapOffer}
+             onStartBooking={() => setBookingStep("select-service")}
+           />
+          )}
+
+          {/* תצוגת מסך החלפות */}
+          { currentTab === "swaps" && (
+            <Swaps
+              myAppointment={upcomingAppointment}
+              onToggleSwapOffer={handleToggleSwapOffer}
+              onRequestSwap={handleRequestSwap}
+              pendingSwapId={pendingSwapId ? Number(pendingSwapId) : null}
+            />
+          )}
+
+          {/* 👈 חיבור בלוק "הודעות" */}
+          {currentTab === "messages" && <Messages />}
+            </>
+            )}
+
+          {/* 👈 חיבור בלוק "פרופיל" */}
+          {currentTab === "profile" && (
+          <Profile 
+           user={user} 
+           onLogout={handleLogout} 
+             />
+           )}
 
           {/* שלב 2: בחירת שירות */}
           {bookingStep === "select-service" && (
@@ -147,6 +257,66 @@ export default function App() {
                 חזור לדף הבית
               </button>
             </div>
+          )}
+
+          {/* שלב 6: מסך אישור החלפת תור */}
+          {bookingStep === "confirm-swap" && (
+            <ConfirmScreen
+              type="swap"
+              title="אישור בקשת החלפה"
+              buttonText="אשר וחכה לאישור 🔄"
+              data={selectedBookingData}
+              onConfirm={handleConfirmSwapFinal}
+              onBack={() => {
+                setBookingStep("home");
+                setCurrentTab("swaps");
+              }}
+            />
+          )}
+
+          {/* 👈 סרגל ניווט תחתון קבוע – מופיע רק כשאנחנו במסך הבית/בלשוניות */}
+          {bookingStep === "home" && (
+            <nav className="bottom-nav">
+              <button
+                className={`nav-item ${currentTab === "home" ? "active" : ""}`}
+                onClick={() => setCurrentTab("home")}
+              >
+                <HomeIcon size={22} />
+                <span>בית</span>
+              </button>
+
+              <button
+                className={`nav-item ${currentTab === "my-appts" ? "active" : ""}`}
+                onClick={() => setCurrentTab("my-appts")}
+              >
+                <Calendar size={22} />
+                <span>התורים שלי</span>
+              </button>
+
+              <button
+                className={`nav-item ${currentTab === "swaps" ? "active" : ""}`}
+                onClick={() => setCurrentTab("swaps")}
+              >
+                <Repeat size={22} />
+                <span>החלפות</span>
+              </button>
+
+              <button
+                className={`nav-item ${currentTab === "messages" ? "active" : ""}`}
+                onClick={() => setCurrentTab("messages")}
+              >
+                <MessageSquare size={22} />
+                <span>הודעות</span>
+              </button>
+
+              <button
+                className={`nav-item ${currentTab === "profile" ? "active" : ""}`}
+                onClick={() => setCurrentTab("profile")}
+              >  
+                <User size={22} />
+                <span>פרופיל</span>
+              </button>
+            </nav>
           )}
         </>
       )}

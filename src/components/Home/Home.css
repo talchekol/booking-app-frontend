@@ -148,6 +148,24 @@
   color: #000000;
 }
 
+/* כפתור WhatsApp */
+.social-btn.whatsapp {
+  color: #25d366;
+}
+
+.social-btn.whatsapp:hover {
+  background-color: #dcfce7;
+}
+
+/* כפתור טלפון */
+.social-btn.phone {
+  color: #2563eb;
+}
+
+.social-btn.phone:hover {
+  background-color: #dbeafe;
+}
+
 /* כפתור קביעת תור מרכזי */
 .cta-button {
   width: 100%;
@@ -255,20 +273,131 @@
   width: fit-content;
 }
 
+/* שורת פעולות כפתורים מורחבת ושווה */
 .card-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #f8fafc;
 }
 
 .action-btn {
-  flex: 1;
-  padding: 10px;
+  flex: 1; /* ייתן שטח שווה ומרווח לשני הכפתורים */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
   border-radius: 12px;
-  font-weight: 600;
   font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* כפתור ביטול תור - נקי ועדין */
+.action-btn.cancel-btn {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.action-btn.cancel-btn:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* כפתור הצע להחלפה - ירוק רענן ואלגנטי */
+.action-btn.swap-btn {
+  color: #15803d;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.action-btn.swap-btn:hover {
+  background-color: #dcfce7;
+  border-color: #86efac;
+}
+
+/* כפתור במצב "ביטול החלפה" (כשהתור מוצע כרגע) */
+.action-btn.cancel-swap-btn {
+  color: #c2410c;
+  background-color: #fff7ed;
+  border-color: #ffedd5;
+}
+
+.action-btn.cancel-swap-btn:hover {
+  background-color: #ffedd5;
+  border-color: #fed7aa;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+}
+/* חלונית אישור ביטול (Modal) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  direction: rtl;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.modal-description {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 20px 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-btn.confirm-cancel {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.modal-btn.dismiss-cancel {
+  background-color: #f1f5f9;
   color: #334155;
 }
 
@@ -282,23 +411,106 @@
   gap: 6px;
 }
 
-/* סקשיין ביקורות */
+/* הדר סקשיין ביקורות - מודרני ונקי */
+.reviews-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.reviews-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reviews-title-group .section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* באדג' דירוג זהב אלגנטי */
+.rating-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fef3c7;
+  color: #d97706;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.775rem;
+  font-weight: 800;
+  width: fit-content;
+  border: 1px solid #fde68a;
+}
+
+.rating-score {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.rating-count {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* כפתור "הוסף ביקורת" מלא חיים */
+.add-review-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.825rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.add-review-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.35);
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+}
+
+.add-review-btn:active {
+  transform: translateY(0);
+}
+
+/* כרטיסיות הביקורת */
 .reviews-scroll {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
   margin-bottom: 24px;
-  scrollbar-width: none; /* הסתרת סרגל גלילה בדפדפנים תומכים */
+  scrollbar-width: none;
+}
+
+.reviews-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .review-card {
   min-width: 240px;
   background-color: #ffffff;
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 18px;
+  padding: 16px;
   border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -311,21 +523,153 @@
 }
 
 .reviewer-name {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .stars-row {
   display: flex;
-  color: #f59e0b;
+  gap: 2px;
 }
 
 .review-text {
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   color: #475569;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+/* כפתור פתיחת טופס ביקורת */
+.add-review-btn {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.add-review-btn:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ----------------------------------- */
+/* מודאל כתיבת ביקורת */
+/* ----------------------------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  direction: rtl;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.modal-description {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+/* בחירת כוכבים בטופס */
+.star-rating-select {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s ease;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+/* שדה הטקסט של הביקורת */
+.review-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  direction: rtl;
+  resize: none;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+.review-textarea:focus {
+  outline: none;
+  border-color: #6d28d9;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-btn.confirm-cancel {
+  color: #ffffff;
+}
+
+.modal-btn.dismiss-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
 }
 
 /* סרגל ניווט תחתון (Bottom Bar) */

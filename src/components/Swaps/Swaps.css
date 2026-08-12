@@ -1,0 +1,264 @@
+.swaps-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 20px 16px 90px 16px;
+  direction: rtl;
+  max-width: 450px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* הדר עליון */
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.screen-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.section-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 20px 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* כרטיסיית "ההצעה שלי" */
+.my-offer-card {
+  background-color: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.05);
+}
+
+.my-offer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.badge-offer {
+  background-color: #ea580c;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.cancel-offer-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.offer-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.offer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.offer-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.offer-time {
+  font-size: 0.825rem;
+  color: #ea580c;
+  font-weight: 700;
+}
+
+/* רשימת תורים של אחרים להחלפה */
+.swaps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.swap-item-card {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.user-swap-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background-color: #f3e8ff;
+  color: #6d28d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.swap-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.swap-time-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.request-swap-btn {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.825rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.request-swap-btn:hover {
+  background-color: #dcfce7;
+}
+
+/* כפתור במצב מחכה לאישור */
+.request-swap-btn.pending {
+  background-color: #fef3c7;
+  color: #d97706;
+  border-color: #fde68a;
+  cursor: default;
+}
+
+/* מודאל אישור החלפה */
+.swap-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.swap-modal-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  direction: rtl;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.swap-modal-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+}
+
+.swap-comparison-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.swap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.swap-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.swap-val {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.swap-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.swap-modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.swap-modal-btn.confirm {
+  background-color: #6d28d9;
+  color: #ffffff;
+}
+
+.swap-modal-btn.cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+}
