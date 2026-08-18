@@ -254,17 +254,33 @@ export default function Home({
           <div className="appointment-card">
             <div className="card-body">
               <img
-                src={upcomingAppt.imageUrl}
-                alt={upcomingAppt.barber}
+                src={
+                  upcomingAppt.provider?.imageUrl ||
+                  upcomingAppt.barber?.imageUrl ||
+                  upcomingAppt.imageUrl ||
+                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+                }
+                alt={upcomingAppt.provider?.name || "ספר"}
                 className="barber-image"
               />
               <div className="appt-details">
-                <span className="service-name">{upcomingAppt.service}</span>
-                <span className="barber-name">עם {upcomingAppt.barber}</span>
+                <span className="service-name">
+                  {upcomingAppt.service?.name || upcomingAppt.service}
+                </span>
+                <span className="barber-name">
+                  עם{" "}
+                  {upcomingAppt.provider?.name ||
+                    upcomingAppt.barber?.name ||
+                    upcomingAppt.barber}
+                </span>
                 <div className="time-badge">
                   <Clock size={14} />
                   <span>
-                    {upcomingAppt.date} • {upcomingAppt.time}
+                    {upcomingAppt.dateTime
+                      ? new Date(upcomingAppt.dateTime).toLocaleDateString(
+                          "he-IL",
+                        )
+                      : upcomingAppt.date}
                   </span>
                 </div>
               </div>

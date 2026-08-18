@@ -10,6 +10,13 @@ import Messages from "./components/Messages/Messages";
 import MyAppointments from "./components/MyAppointments/MyAppointments";
 import Profile from "./components/Profile/Profile";
 import {
+  getMyAppointmentsApi,
+  cancelAppointmentApi,
+  toggleSwapOfferApi,
+  createNewAppointment,
+  createSwapRequestApi,
+} from "./services/api";
+import {
   CheckCircle2,
   HomeIcon,
   Calendar,
@@ -19,8 +26,24 @@ import {
 } from "lucide-react";
 import "./App.css";
 
+// TODO: SelectService/SelectBarber עדיין מציגים נתוני דמה עם מזהים מומצאים
+// (לא UUID-ים אמיתיים מה-DB), כי מסך ניהול העסק שדרכו ייווצרו שירותים/ספקים
+// אמיתיים עדיין לא בנוי. עד אז קביעת תור מחוברת לעסק/ספק/שירות היחיד שנוצר
+// ב-seed.js, ובחירת השירות/הספר במסכים משמשת לתצוגה בלבד. יש לחבר בפועל
+// ל-selectedBookingData.service.id / .barber.id ברגע שהנתונים האלה יגיעו מה-DB.
+const DEFAULT_BUSINESS_ID = "1c7ac3d9-03a5-4f9d-8d7f-3bd1fb1f53fd";
+const DEFAULT_PROVIDER_ID = "d285ea0c-8371-40f2-a642-9689db7199ac";
+const DEFAULT_SERVICE_ID = "0f1f9edb-5d06-49bf-b9dd-9d3babe653c2";
+
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   // ניהול השלב הנוכחי בתהליך קביעת התור
   // 'home' | 'select-service' | 'select-barber' | 'select-datetime' | 'confirm'
@@ -29,130 +52,171 @@ export default function App() {
   const [selectedBookingData, setSelectedBookingData] = useState({});
   // 👈 שמירת מזהה הצעת ההחלפה הממתינה
   const [pendingSwapId, setPendingSwapId] = useState(() => {
-  try {
-    return localStorage.getItem("pendingSwapId") || null;
-  } catch (e) {
-    return null;
-  }
-});
-
-  //שומר את התור הקרוב ב-state וב-localStorage
-  const [upcomingAppointment, setUpcomingAppointment] = useState(() => {
     try {
-      const savedAppt = localStorage.getItem("upcomingAppointment");
-      return savedAppt ? JSON.parse(savedAppt) : null;
+      return localStorage.getItem("pendingSwapId") || null;
     } catch (e) {
       return null;
     }
   });
 
+  // State לתור הקרוב והיסטוריה מהשרת
+  const [upcomingAppointment, setUpcomingAppointment] = useState(null);
+  const [appointmentsHistory, setAppointmentsHistory] = useState([]);
+  const [loadingAppts, setLoadingAppts] = useState(false);
+
+  // 👈 טעינת התורים מ-Neon בטעינה ראשונה וכשהמשתמש מחובר
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem("user");
-      }
+    if (user) {
+      loadAppointments();
     }
-  }, []);
+  }, [user]);
+
+  const loadAppointments = async () => {
+    setLoadingAppts(true);
+    try {
+      const data = await getMyAppointmentsApi();
+      // השרת מחזיר אובייקט עם upcoming ו-history
+      setUpcomingAppointment(data.upcoming || null);
+      setAppointmentsHistory(data.history || []);
+    } catch (err) {
+      console.error("שגיאה בטעינת תורים מהשרת:", err);
+    } finally {
+      setLoadingAppts(false);
+    }
+  };
 
   // בחירת שירות ומעבר לשלב הבא
   const handleSelectService = (service) => {
     setSelectedBookingData((prev) => ({ ...prev, service }));
     setBookingStep("select-barber"); // יעבור למסך בחירת ספר!
-    console.log("נבחר שירות:", service);
   };
 
   // 2. שמירת ספר ומעבר לבחירת תאריך ושעה
   const handleSelectBarber = (barber) => {
     setSelectedBookingData((prev) => ({ ...prev, barber }));
     setBookingStep("select-datetime");
-    console.log("נתוני ההזמנה עד כה:", { ...selectedBookingData, barber });
   };
 
   // 3. שמירת תאריך ושעה ומעבר למסך אישור פרטים
   const handleSelectDateTime = ({ date, time, dayName }) => {
     setSelectedBookingData((prev) => ({ ...prev, date, time, dayName }));
-    setBookingStep("confirm"); // מעבר למסך אישור פרטים!
-    console.log("נתוני הזמנה מלאים:", {
-      ...selectedBookingData,
-      date,
-      time,
-      dayName,
-    });
+    setBookingStep("confirm");
   };
 
-  // 4. טיפול באישור סופי של ההזמנה
-  const handleFinalConfirm = (finalData) => {
-    console.log("נתוני ההזמנה המלאים שנשלחו:", finalData);
-    // בונים את אובייקט התור המעודכן
-    const newAppointment = {
-      service: finalData.service?.name || "תספורת",
-      barber: finalData.barber?.name || "ספר",
-      date: finalData.date,
-      time: finalData.time,
-      imageUrl:
-        finalData.barber?.imageUrl ||
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    };
+  // אישור סופי של קביעת תור מול השרת
+  const handleFinalConfirm = async (finalData) => {
+    try {
+      // ראו הערת TODO למעלה - מזהים קבועים עד שבחירת השירות/הספר תתחבר ל-DB אמיתי
+      const appointmentPayload = {
+        businessId: DEFAULT_BUSINESS_ID,
+        providerId: DEFAULT_PROVIDER_ID,
+        serviceId: DEFAULT_SERVICE_ID,
+        // חיבור התאריך והשעה ל-ISO String תקין
+        dateTime: new Date(
+          `${finalData.date}T${finalData.time}:00`,
+        ).toISOString(),
+      };
 
-    // שמירה ב-State וב-localStorage
-    setUpcomingAppointment(newAppointment);
-    localStorage.setItem("upcomingAppointment", JSON.stringify(newAppointment));
+      // שליחה אסינכרונית ל-Node.js -> PostgreSQL
+      await createNewAppointment(appointmentPayload);
 
-    setBookingStep("success");
+      // רענון התור הקרוב וההיסטוריה בלייב מ-Neon
+      await loadAppointments();
+
+      // מעבר למסך ההצלחה
+      setBookingStep("success");
+    } catch (err) {
+      console.error("שגיאה ביצירת התור בשרת:", err);
+      alert(err.message || "אירעה שגיאה בקביעת התור, אנא נסה שוב");
+    }
   };
 
-  // 👈 פונקציה לביטול התור
-  const handleCancelAppointment = () => {
-    setUpcomingAppointment(null);
-    localStorage.removeItem("upcomingAppointment");
+  // ביטול תור (מעודכן מול השרת)
+  const handleCancelAppointment = async () => {
+    if (upcomingAppointment?.id) {
+      try {
+        await cancelAppointmentApi(upcomingAppointment.id);
+        loadAppointments(); // רענון מהשרת
+      } catch (err) {
+        console.error("שגיאה בביטול התור:", err);
+        alert(err.message || "אירעה שגיאה בביטול התור, אנא נסה שוב");
+      }
+    } else {
+      setUpcomingAppointment(null);
+      localStorage.removeItem("upcomingAppointment");
+    }
   };
 
-  // 👈 פונקציה שמחליפה את מצב ההצעה להחלפה (Toggle)
-  const handleToggleSwapOffer = () => {
+  // שינוי מצב הצעה להחלפה (Toggle מעודכן מול השרת)
+  const handleToggleSwapOffer = async () => {
     if (!upcomingAppointment) return;
 
-    const updatedAppt = {
-      ...upcomingAppointment,
-      isUpForSwap: !upcomingAppointment.isUpForSwap,
-    };
-
-    setUpcomingAppointment(updatedAppt);
-    localStorage.setItem("upcomingAppointment", JSON.stringify(updatedAppt));
+    if (upcomingAppointment.id) {
+      try {
+        await toggleSwapOfferApi(upcomingAppointment.id);
+        loadAppointments(); // רענון התור המעודכן מהשרת
+      } catch (err) {
+        console.error("שגיאה בריענון מצב החלפה:", err);
+        alert(err.message || "אירעה שגיאה בעדכון הצעת ההחלפה, אנא נסה שוב");
+      }
+    } else {
+      const updatedAppt = {
+        ...upcomingAppointment,
+        isUpForSwap: !upcomingAppointment.isUpForSwap,
+      };
+      setUpcomingAppointment(updatedAppt);
+    }
   };
 
-  // 👈 בקשת החלפת תור מול משתמש אחר
-  const handleRequestSwap = (targetAppt) => {
+  // בקשת החלפת תור - item הוא SwapOffer עם appointment מקונן בתוכו
+  const handleRequestSwap = (item) => {
+    const targetAppt = item?.appointment || item;
+    const targetUser = targetAppt?.user;
+    const otherUserName = targetUser?.firstName
+      ? `${targetUser.firstName} ${targetUser.lastName || ""}`.trim()
+      : "משתמש";
+
     setSelectedBookingData({
       myAppt: upcomingAppointment,
-      targetAppt: targetAppt,
-      otherUserName: targetAppt.userName,
-      targetId: targetAppt.id,
+      targetAppt,
+      otherUserName,
+      swapOfferId: item.id,
     });
     setBookingStep("confirm-swap");
   };
 
-  // 👈 2. סיום תהליך אישור ההחלפה
-  const handleConfirmSwapFinal = (confirmedData) => {
-  // חילוץ ה-targetId שנשמר ב-data
-  const targetId = confirmedData?.targetId || confirmedData?.targetAppt?.id;
+  // סיום תהליך אישור ההחלפה - שליחת בקשת ההחלפה בפועל לשרת
+  const handleConfirmSwapFinal = async (confirmedData) => {
+    const swapOfferId = confirmedData?.swapOfferId;
 
-  if (targetId) {
-    setPendingSwapId(targetId);
-    localStorage.setItem("pendingSwapId", String(targetId)); // שמירה ב-localStorage
-  }
+    if (swapOfferId && upcomingAppointment?.id) {
+      try {
+        await createSwapRequestApi(swapOfferId, upcomingAppointment.id);
+        setPendingSwapId(swapOfferId);
+        localStorage.setItem("pendingSwapId", String(swapOfferId));
+      } catch (err) {
+        console.error("שגיאה בשליחת בקשת ההחלפה:", err);
+        alert(err.message || "אירעה שגיאה בשליחת בקשת ההחלפה, אנא נסה שוב");
+      }
+    }
 
-  setBookingStep("home");
-  setCurrentTab("swaps");
-};
+    setBookingStep("home");
+    setCurrentTab("swaps");
+  };
 
-  //פונקציית התנתקות
+  // רענון התורים לאחר שהחלפה בוצעה/טופלה בלשונית ההחלפות
+  const handleSwapChanged = () => {
+    setPendingSwapId(null);
+    localStorage.removeItem("pendingSwapId");
+    loadAppointments();
+  };
+
+  // התנתקות מהחשבון
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    setUpcomingAppointment(null);
   };
 
   return (
@@ -164,48 +228,49 @@ export default function App() {
           {/* תצוגת דף הבית */}
           {bookingStep === "home" && (
             <>
-           { currentTab === "home" && (
-            <Home
-              user={user}
-              upcomingAppt={upcomingAppointment}
-              onStartBooking={() => setBookingStep("select-service")}
-              onCancelAppointment={handleCancelAppointment}
-              onToggleSwapOffer={handleToggleSwapOffer}
-            />
-          )}
+              {currentTab === "home" && (
+                <Home
+                  user={user}
+                  upcomingAppt={upcomingAppointment}
+                  onStartBooking={() => setBookingStep("select-service")}
+                  onCancelAppointment={handleCancelAppointment}
+                  onToggleSwapOffer={handleToggleSwapOffer}
+                />
+              )}
 
-          {/* 👈 חיבור בלוק "התורים שלי" */}
-         {currentTab === "my-appts" && (
-          <MyAppointments
-             upcomingAppt={upcomingAppointment}
-             onCancelAppointment={handleCancelAppointment}
-             onToggleSwapOffer={handleToggleSwapOffer}
-             onStartBooking={() => setBookingStep("select-service")}
-           />
-          )}
+              {/* 👈 חיבור בלוק "התורים שלי" */}
+              {currentTab === "my-appts" && (
+                <MyAppointments
+                  upcomingAppt={upcomingAppointment}
+                  historyAppts={appointmentsHistory}
+                  onCancelAppointment={handleCancelAppointment}
+                  onToggleSwapOffer={handleToggleSwapOffer}
+                  onStartBooking={() => setBookingStep("select-service")}
+                />
+              )}
 
-          {/* תצוגת מסך החלפות */}
-          { currentTab === "swaps" && (
-            <Swaps
-              myAppointment={upcomingAppointment}
-              onToggleSwapOffer={handleToggleSwapOffer}
-              onRequestSwap={handleRequestSwap}
-              pendingSwapId={pendingSwapId ? Number(pendingSwapId) : null}
-            />
-          )}
+              {/* תצוגת מסך החלפות */}
+              {currentTab === "swaps" && (
+                <Swaps
+                  myAppointment={upcomingAppointment}
+                  onToggleSwapOffer={handleToggleSwapOffer}
+                  onRequestSwap={handleRequestSwap}
+                  pendingSwapId={pendingSwapId}
+                  onSwapChanged={handleSwapChanged}
+                />
+              )}
 
-          {/* 👈 חיבור בלוק "הודעות" */}
-          {currentTab === "messages" && <Messages />}
+              {/* 👈 חיבור בלוק "הודעות" */}
+              {currentTab === "messages" && (
+                <Messages onAppointmentUpdated={loadAppointments} />
+              )}
             </>
-            )}
+          )}
 
           {/* 👈 חיבור בלוק "פרופיל" */}
           {currentTab === "profile" && (
-          <Profile 
-           user={user} 
-           onLogout={handleLogout} 
-             />
-           )}
+            <Profile user={user} onLogout={handleLogout} />
+          )}
 
           {/* שלב 2: בחירת שירות */}
           {bookingStep === "select-service" && (
@@ -312,7 +377,7 @@ export default function App() {
               <button
                 className={`nav-item ${currentTab === "profile" ? "active" : ""}`}
                 onClick={() => setCurrentTab("profile")}
-              >  
+              >
                 <User size={22} />
                 <span>פרופיל</span>
               </button>

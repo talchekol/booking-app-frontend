@@ -138,3 +138,76 @@
   padding: 40px 0;
   font-size: 0.9rem;
 }
+
+.incoming-badge {
+  background-color: #ef4444;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+.messages-loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  margin: 16px 0;
+}
+
+.requests-group {
+  margin-bottom: 16px;
+}
+
+.message-body-full {
+  width: 100%;
+}
+
+.swap-details-text {
+  margin-bottom: 10px;
+}
+
+.message-actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.swap-approve-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.swap-approve-btn:disabled,
+.swap-reject-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.swap-reject-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f1f5f9;
+  color: #ef4444;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.swap-reject-btn:hover:not(:disabled) {
+  background-color: #fee2e2;
+}

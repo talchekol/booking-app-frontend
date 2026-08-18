@@ -174,7 +174,57 @@
   background-color: #fef3c7;
   color: #d97706;
   border-color: #fde68a;
-  cursor: default;
+  cursor: pointer;
+}
+
+.request-swap-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* כפתורי אישור/דחייה של בקשת החלפה נכנסת */
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.approve-request-btn,
+.decline-request-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.approve-request-btn {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.approve-request-btn:hover {
+  background-color: #dcfce7;
+}
+
+.decline-request-btn {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.decline-request-btn:hover {
+  background-color: #fee2e2;
+}
+
+.approve-request-btn:disabled,
+.decline-request-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* מודאל אישור החלפה */

@@ -68,15 +68,58 @@
   color: #64748b;
 }
 
-/* הודעת שגיאה */
+/* הצגת שגיאות */
 .error-message {
   background-color: #fef2f2;
   color: #dc2626;
-  padding: 12px;
+  border: 1px solid #fecaca;
+  padding: 10px 14px;
   border-radius: 12px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 16px;
   text-align: center;
-  border: 1px solid #fee2e2;
+}
+
+/* כפתור חזרה אחורה */
+.back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  width: 100%;
+}
+
+.back-btn:hover {
+  color: #0f172a;
+}
+
+/* אנימציית ספינר לטעינה בכפתור */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* כפתור Submit בזמן הטעינה */
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* טפסים ושדות קלט */

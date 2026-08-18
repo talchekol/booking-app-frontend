@@ -8,33 +8,47 @@ import {
 } from "lucide-react";
 import "./MyAppointments.css";
 
+// פונקציות עזר דינמיות לחילוץ בטוח של שדות התור
+const getServiceName = (appt) =>
+  appt?.service?.name ||
+  (typeof appt?.service === "string" ? appt.service : "תספורת");
+
+const getBarberName = (appt) =>
+  appt?.provider?.name ||
+  appt?.barber?.name ||
+  (typeof appt?.barber === "string" ? appt.barber : "ספר");
+
+const getImageUrl = (appt) =>
+  appt?.provider?.imageUrl ||
+  appt?.barber?.imageUrl ||
+  appt?.imageUrl ||
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
+
+const formatApptDate = (appt) => {
+  if (appt?.dateTime) {
+    return new Date(appt.dateTime).toLocaleDateString("he-IL");
+  }
+  return appt?.date || "";
+};
+
+const formatApptTime = (appt) => {
+  if (appt?.dateTime) {
+    return new Date(appt.dateTime).toLocaleTimeString("he-IL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  return appt?.time || "";
+};
+
 export default function MyAppointments({
   upcomingAppt,
+  historyAppts = [],
   onCancelAppointment,
   onToggleSwapOffer,
   onStartBooking,
 }) {
-  const [activeTab, setActiveTab] = useState("upcoming"); // 'upcoming' | 'history'
-
-  // נתוני דמו לתורים שהיו בעבר
-  const pastAppointments = [
-    {
-      id: 1,
-      service: "תספורת גברים",
-      barber: "דניאל",
-      date: "12/07/2026",
-      time: "17:00",
-      status: "הושלם",
-    },
-    {
-      id: 2,
-      service: "תספורת + זקן",
-      barber: "יוסי",
-      date: "18/06/2026",
-      time: "15:30",
-      status: "הושלם",
-    },
-  ];
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   return (
     <div className="my-appts-container">
@@ -66,17 +80,22 @@ export default function MyAppointments({
             <div className="appointment-card">
               <div className="card-body">
                 <img
-                  src={upcomingAppt.imageUrl}
-                  alt={upcomingAppt.barber}
+                  src={getImageUrl(upcomingAppt)}
+                  alt={getBarberName(upcomingAppt)}
                   className="barber-image"
                 />
                 <div className="appt-details">
-                  <span className="service-name">{upcomingAppt.service}</span>
-                  <span className="barber-name">עם {upcomingAppt.barber}</span>
+                  <span className="service-name">
+                    {getServiceName(upcomingAppt)}
+                  </span>
+                  <span className="barber-name">
+                    עם {getBarberName(upcomingAppt)}
+                  </span>
                   <div className="time-badge">
                     <Clock size={14} />
                     <span>
-                      {upcomingAppt.date} • {upcomingAppt.time}
+                      {formatApptDate(upcomingAppt)} •{" "}
+                      {formatApptTime(upcomingAppt)}
                     </span>
                   </div>
                 </div>
@@ -128,16 +147,20 @@ export default function MyAppointments({
       {/* לשונית 2: תורים קודמים */}
       {activeTab === "history" && (
         <div className="history-list">
-          {pastAppointments.length > 0 ? (
-            pastAppointments.map((item) => (
+          {historyAppts && historyAppts.length > 0 ? (
+            historyAppts.map((item) => (
               <div key={item.id} className="history-card">
                 <div className="history-info">
-                  <span className="history-service">{item.service}</span>
-                  <span className="history-barber">עם {item.barber}</span>
+                  <span className="history-service">
+                    {getServiceName(item)}
+                  </span>
+                  <span className="history-barber">
+                    עם {getBarberName(item)}
+                  </span>
                   <div className="history-date">
                     <Calendar size={13} />
                     <span>
-                      {item.date} • {item.time}
+                      {formatApptDate(item)} • {formatApptTime(item)}
                     </span>
                   </div>
                 </div>
@@ -147,7 +170,9 @@ export default function MyAppointments({
                     size={12}
                     style={{ display: "inline", marginLeft: "4px" }}
                   />
-                  {item.status}
+                  {item.status === "CONFIRMED"
+                    ? "מאושר"
+                    : item.status || "הושלם"}
                 </div>
               </div>
             ))

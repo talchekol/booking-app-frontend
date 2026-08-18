@@ -23,6 +23,20 @@ export default function ConfirmScreen({
     onConfirm({ ...data, notes });
   };
 
+  // תמיכה גם בתורים אמיתיים מהשרת (dateTime) וגם בפורמט מקומי (date/time)
+  const formatApptDate = (appt) =>
+    appt?.dateTime
+      ? new Date(appt.dateTime).toLocaleDateString("he-IL")
+      : appt?.date || "";
+
+  const formatApptTime = (appt) =>
+    appt?.dateTime
+      ? new Date(appt.dateTime).toLocaleTimeString("he-IL", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : appt?.time || "";
+
   return (
     <div className="confirm-screen-container">
       {/* 1. כותרת וכפתור חזרה */}
@@ -90,7 +104,8 @@ export default function ConfirmScreen({
             <div className="swap-box current">
               <span className="summary-label">התור הנוכחי שאתה מוסר:</span>
               <span className="summary-value">
-                {data.myAppt?.date} בשעה {data.myAppt?.time}
+                {formatApptDate(data.myAppt)} בשעה{" "}
+                {formatApptTime(data.myAppt)}
               </span>
             </div>
 
@@ -103,7 +118,8 @@ export default function ConfirmScreen({
                 התור החדש שתקבל ({data.otherUserName}):
               </span>
               <span className="summary-value">
-                {data.targetAppt?.date} בשעה {data.targetAppt?.time}
+                {formatApptDate(data.targetAppt)} בשעה{" "}
+                {formatApptTime(data.targetAppt)}
               </span>
             </div>
           </div>

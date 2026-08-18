@@ -1,18 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronRight, Calendar as CalendarIcon, Clock } from "lucide-react";
 import "./SelectDateTime.css";
 
 export default function SelectDateTime({ onSelectDateTime, onBack }) {
-  // תאריכים לדוגמה (שבוע קרוב)
-  const availableDates = [
-    { id: "1", dayName: "א׳", dateNum: "02", fullDate: "02/08/2026" },
-    { id: "2", dayName: "ב׳", dateNum: "03", fullDate: "03/08/2026" },
-    { id: "3", dayName: "ג׳", dateNum: "04", fullDate: "04/08/2026" },
-    { id: "4", dayName: "ד׳", dateNum: "05", fullDate: "05/08/2026" },
-    { id: "5", dayName: "ה׳", dateNum: "06", fullDate: "06/08/2026" },
-    { id: "6", dayName: "ו׳", dateNum: "07", fullDate: "07/08/2026" },
-    { id: "7", dayName: "ש׳", dateNum: "08", fullDate: "08/08/2026" },
-  ];
+  // 1. חישוב דינמי של 7 הימים הקרובים החל מהיום
+  const availableDates = useMemo(() => {
+    const days = [];
+    const dayLetters = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const dateNum = String(d.getDate()).padStart(2, "0");
+
+      days.push({
+        id: String(i + 1),
+        dayName: dayLetters[d.getDay()],
+        dateNum: dateNum,
+        // פורמט ISO תקין (YYYY-MM-DD) שנשלח לשרת
+        fullDate: `${year}-${month}-${dateNum}`,
+        // לתצוגה יפה
+        displayDate: `${dateNum}/${month}`,
+      });
+    }
+    return days;
+  }, []);
 
   // שעות פנויות לדוגמה (בהמשך יחושבו דינמית ב-Backend לפי שעות פעילות ותורים קיימים)
   const availableTimes = [

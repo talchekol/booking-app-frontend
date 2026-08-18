@@ -112,15 +112,9 @@ export default function LoginSMS({ onLoginSuccess, businessLogoUrl }) {
 
       if (onLoginSuccess) onLoginSuccess(updatedUser);
     } catch (err) {
-      // אם עוד לא הקמנו את ה-Endpoint לעדכון, נעביר את המשתמש קדימה לעת עתה
-      const updatedUser = {
-        ...userData,
-        firstName,
-        lastName,
-        isNewUser: false,
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      if (onLoginSuccess) onLoginSuccess(updatedUser);
+      setError(
+        err.response?.data?.error || "לא הצלחנו לשמור את הפרטים, אנא נסה שוב",
+      );
     } finally {
       setLoading(false);
     }
