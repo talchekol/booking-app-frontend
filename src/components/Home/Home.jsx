@@ -1,14 +1,10 @@
 import React, { useState } from "react";
 
 import {
-  Calendar,
   PlusCircle,
   Clock,
   RefreshCw,
-  Home as HomeIcon,
   User,
-  MessageSquare,
-  Repeat,
   MapPin,
   Star,
   Navigation,
@@ -436,49 +432,6 @@ export default function Home({
             </div>
           </div>
         )}
-        {/*  סרגל ניווט תחתון מחובר בלייב */}
-        <nav className="bottom-nav">
-          <button
-            className="nav-item active"
-            onClick={() => onNavigateTab && onNavigateTab("home")}
-          >
-            <HomeIcon size={22} />
-            <span>בית</span>
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() => onNavigateTab && onNavigateTab("my-appts")}
-          >
-            <Calendar size={22} />
-            <span>התורים שלי</span>
-          </button>
-
-          {/* 👈 בלחיצה על החלפות - יעבור למסך Swaps */}
-          <button
-            className="nav-item"
-            onClick={() => onNavigateTab && onNavigateTab("swaps")}
-          >
-            <Repeat size={22} />
-            <span>החלפות</span>
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() => onNavigateTab && onNavigateTab("messages")}
-          >
-            <MessageSquare size={22} />
-            <span>הודעות</span>
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() => onNavigateTab && onNavigateTab("profile")}
-          >
-            <User size={22} />
-            <span>פרופיל</span>
-          </button>
-        </nav>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AdminDashboard from "./admin/AdminDashboard";
 import LoginSMS from "./components/LoginSMS/LoginSMS";
 import Home from "./components/Home/Home";
 import SelectService from "./components/SelectService/SelectService";
@@ -15,6 +16,8 @@ import {
   toggleSwapOfferApi,
   createNewAppointment,
   createSwapRequestApi,
+  getBusinessAppointmentsApi,
+  updateAppointmentStatusApi,
 } from "./services/api";
 import {
   CheckCircle2,
@@ -66,7 +69,7 @@ export default function App() {
 
   // 👈 טעינת התורים מ-Neon בטעינה ראשונה וכשהמשתמש מחובר
   useEffect(() => {
-    if (user) {
+    if (user && user.role !== "ADMIN") {
       loadAppointments();
     }
   }, [user]);
@@ -106,15 +109,15 @@ export default function App() {
   // אישור סופי של קביעת תור מול השרת
   const handleFinalConfirm = async (finalData) => {
     try {
+      // הרכבת מחרוזת תאריך ושעה ישירה ב-UTC
+      const dateTimeUtc = `${finalData.date}T${finalData.time}:00.000Z`;
+
       // ראו הערת TODO למעלה - מזהים קבועים עד שבחירת השירות/הספר תתחבר ל-DB אמיתי
       const appointmentPayload = {
         businessId: DEFAULT_BUSINESS_ID,
-        providerId: DEFAULT_PROVIDER_ID,
-        serviceId: DEFAULT_SERVICE_ID,
-        // חיבור התאריך והשעה ל-ISO String תקין
-        dateTime: new Date(
-          `${finalData.date}T${finalData.time}:00`,
-        ).toISOString(),
+        providerId: selectedBookingData.barber?.id || DEFAULT_PROVIDER_ID,
+        serviceId: selectedBookingData.service?.id || DEFAULT_SERVICE_ID,
+        dateTime: dateTimeUtc,
       };
 
       // שליחה אסינכרונית ל-Node.js -> PostgreSQL
@@ -223,11 +226,17 @@ export default function App() {
     <div>
       {!user ? (
         <LoginSMS onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />
+      ) : user.role === "ADMIN" ? (
+        /* תצוגת מסך ניהול לבעל העסק */
+        <div className="admin-app-wrapper">
+          <AdminDashboard businessName="מספרת טל" onLogout={handleLogout} />
+        </div>
       ) : (
-        <>
-          {/* תצוגת דף הבית */}
+        /* תצוגת אפליקציית מובייל ללקוח */
+        <div className="client-mobile-wrapper">
           {bookingStep === "home" && (
             <>
+              {/* תצוגת דף הבית */}
               {currentTab === "home" && (
                 <Home
                   user={user}
@@ -383,7 +392,7 @@ export default function App() {
               </button>
             </nav>
           )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,41 +1,28 @@
 import React from "react";
-import { ChevronRight, ChevronLeft, Star, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronRight, ChevronLeft, Star, Users, User } from "lucide-react";
 import "./SelectBarber.css";
+import { getPublicProvidersApi } from "../../services/api";
 
 export default function SelectBarber({ onSelectBarber, onBack }) {
-  // נתוני ספרים (בהמשך יגיעו מ-Neon/Prisma)
-  const barbers = [
-    {
-      id: "any",
-      name: "כל ספר פנוי",
-      title: "התור הקרוב ביותר שזמין",
-      isAny: true,
-    },
-    {
-      id: 1,
-      name: "דניאל",
-      title: "מומחה לתספורות גברים וזקנים",
-      rating: 4.9,
-      imageUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 2,
-      name: "יוסי",
-      title: "מומחה לתספורות ילדים ועיצוב",
-      rating: 4.8,
-      imageUrl:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    },
-    {
-      id: 3,
-      name: "אור",
-      title: "מומחה לצבע והחלקות",
-      rating: 4.7,
-      imageUrl:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    },
-  ];
+  const [barbers, setBarbers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBarbers = async () => {
+      try {
+        setLoading(true);
+        const data = await getPublicProvidersApi();
+        setBarbers(data || []);
+      } catch (err) {
+        console.error("שגיאה בטעינת ספרים:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBarbers();
+  }, []);
 
   return (
     <div className="select-barber-container">
@@ -50,45 +37,39 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
 
       {/* 2. רשימת הספרים */}
       <div className="barbers-list">
-        {barbers.map((barber) => (
-          <div
-            key={barber.id}
-            className="barber-card"
-            onClick={() => onSelectBarber(barber)}
-          >
-            <div className="barber-main-info">
-              {/* תמונה או אייקון ל"כל ספר" */}
-              <div className="barber-avatar-wrapper">
-                {barber.isAny ? (
-                  <div className="any-barber-avatar">
-                    <Users size={24} />
-                  </div>
-                ) : (
+        {loading ? (
+          <div className="empty-state">טוען ספרים...</div>
+        ) : barbers.length > 0 ? (
+          barbers.map((barber) => (
+            <div
+              key={barber.id}
+              className="barber-card"
+              onClick={() => onSelectBarber(barber)}
+            >
+              <div className="barber-main-info">
+                {barber.imageUrl ? (
                   <img
                     src={barber.imageUrl}
                     alt={barber.name}
                     className="barber-avatar"
                   />
-                )}
-              </div>
-
-              {/* פרטי הספר */}
-              <div className="barber-details">
-                <span className="barber-name">{barber.name}</span>
-                <span className="barber-title">{barber.title}</span>
-
-                {barber.rating && (
-                  <div className="barber-rating">
-                    <Star size={13} fill="#f59e0b" color="#f59e0b" />
-                    <span>{barber.rating}</span>
+                ) : (
+                  <div className="barber-avatar-fallback">
+                    <User size={24} />
                   </div>
                 )}
+                <div className="barber-details">
+                  <span className="barber-title">{barber.name}</span>
+                  <span className="barber-subtitle">ספר מוסמך</span>
+                </div>
               </div>
-            </div>
 
-            <ChevronLeft size={20} className="arrow-icon" />
-          </div>
-        ))}
+              <ChevronLeft size={20} className="arrow-icon" />
+            </div>
+          ))
+        ) : (
+          <div className="empty-state">אין אנשי צוות רשומים כרגע.</div>
+        )}
       </div>
     </div>
   );
