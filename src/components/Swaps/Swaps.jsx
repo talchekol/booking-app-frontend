@@ -13,33 +13,29 @@ import {
   approveSwapRequestApi,
   rejectSwapRequestApi,
 } from "../../services/api";
+import { extractTimeFromIso } from "../../utils/dateUtils";
 import "./Swaps.css";
 
-// פונקציות עזר דינמיות לחילוץ בטוח של שדות התור
-const getServiceName = (appt) =>
-  appt?.service?.name ||
-  (typeof appt?.service === "string" ? appt.service : "תספורת");
+// --- פונקציות עזר ועיבוד נתונים מחוץ ל-JSX ---
 
-const getBarberName = (appt) =>
-  appt?.provider?.name ||
-  appt?.barber?.name ||
-  (typeof appt?.barber === "string" ? appt.barber : "ספר");
-
-const formatApptDate = (appt) => {
-  if (appt?.dateTime) {
-    return new Date(appt.dateTime).toLocaleDateString("he-IL");
+const formatApptDate = (dateTimeStr) => {
+  if (
+    dateTimeStr &&
+    typeof dateTimeStr === "string" &&
+    dateTimeStr.includes("T")
+  ) {
+    const [datePart] = dateTimeStr.split("T");
+    const [year, month, day] = datePart.split("-");
+    return `${day}/${month}/${year}`;
   }
-  return appt?.date || "";
+  return "";
 };
 
-const formatApptTime = (appt) => {
-  if (appt?.dateTime) {
-    return new Date(appt.dateTime).toLocaleTimeString("he-IL", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+const formatApptTime = (dateTimeStr) => {
+  if (dateTimeStr) {
+    return extractTimeFromIso(dateTimeStr);
   }
-  return appt?.time || "";
+  return "";
 };
 
 const getUserDisplayName = (user) => {
@@ -47,6 +43,57 @@ const getUserDisplayName = (user) => {
     return `${user.firstName} ${user.lastName || ""}`.trim();
   }
   return "משתמש";
+};
+
+// עיבוד נתוני התור שלי
+const formatMyOffer = (appt) => {
+  if (!appt) return null;
+  const service = appt.service?.name || "תספורת";
+  const barber = appt.provider?.name || appt.barber?.name || "ספר";
+  return {
+    title: `${service} (עם ${barber})`,
+    timeDisplay: `${formatApptDate(appt.dateTime)} בשעה ${formatApptTime(appt.dateTime)}`,
+  };
+};
+
+// עיבוד בקשה נכנסת
+const formatIncomingRequestItem = (req) => {
+  const requesterName = getUserDisplayName(req.requester);
+  const offered = req.offeredAppointment;
+  const serviceName = offered?.service?.name || "תספורת";
+  return {
+    id: req.id,
+    initial: requesterName.charAt(0),
+    title: `${requesterName} מציע/ה • ${serviceName}`,
+    timeDisplay: `${formatApptDate(offered?.dateTime)} בשעה ${formatApptTime(offered?.dateTime)}`,
+  };
+};
+
+// עיבוד בקשה יוצאת
+const formatOutgoingRequestItem = (req) => {
+  const targetAppt = req.ownerAppointment;
+  const ownerName = getUserDisplayName(req.owner);
+  const serviceName = targetAppt?.service?.name || "תספורת";
+  return {
+    id: req.id,
+    initial: ownerName.charAt(0),
+    title: `${ownerName} • ${serviceName}`,
+    timeDisplay: `${formatApptDate(targetAppt?.dateTime)} בשעה ${formatApptTime(targetAppt?.dateTime)}`,
+  };
+};
+
+// עיבוד תור זמין בקהילה
+const formatCommunitySwapItem = (item) => {
+  const appt = item.appointment || item;
+  const userName = getUserDisplayName(appt.user);
+  const serviceName = appt.service?.name || "תספורת";
+  return {
+    id: item.id,
+    initial: userName.charAt(0),
+    title: `${userName} • ${serviceName}`,
+    timeDisplay: `${formatApptDate(appt.dateTime)} בשעה ${formatApptTime(appt.dateTime)}`,
+    raw: item,
+  };
 };
 
 export default function Swaps({
@@ -62,7 +109,6 @@ export default function Swaps({
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  // טעינת תורים זמינים להחלפה + בקשות ההחלפה שלי מה-Backend
   const loadMarketSwaps = async () => {
     setLoading(true);
     try {
@@ -71,8 +117,12 @@ export default function Swaps({
         getMySwapRequestsApi(),
       ]);
       setAvailableSwaps(Array.isArray(swaps) ? swaps : []);
-      setIncomingRequests(Array.isArray(requests?.incoming) ? requests.incoming : []);
-      setOutgoingRequests(Array.isArray(requests?.outgoing) ? requests.outgoing : []);
+      setIncomingRequests(
+        Array.isArray(requests?.incoming) ? requests.incoming : [],
+      );
+      setOutgoingRequests(
+        Array.isArray(requests?.outgoing) ? requests.outgoing : [],
+      );
     } catch (err) {
       console.error("שגיאה בטעינת נתוני שוק ההחלפות:", err);
       setAvailableSwaps([]);
@@ -83,8 +133,6 @@ export default function Swaps({
     }
   };
 
-  // מתרענן מחדש גם אם ה-tab נשאר פתוח ומצב ההצעה של המשתמש/ההצעה הממתינה משתנה
-  // (למשל ביטול הצעה מדף הבית בזמן שה-tab הזה עדיין מחובר)
   useEffect(() => {
     loadMarketSwaps();
   }, [myAppointment?.isUpForSwap, pendingSwapId]);
@@ -116,9 +164,19 @@ export default function Swaps({
     }
   };
 
+  const myOfferData = formatMyOffer(myAppointment);
+  // מסך השוק מציג רק בקשות פעילות/ממתינות - היסטוריית בקשות שטופלו
+  // (אושרו/נדחו/בוטלו) מוצגת בטאב "הודעות", לא כאן
+  const incomingList = incomingRequests
+    .filter((req) => req.status === "PENDING")
+    .map(formatIncomingRequestItem);
+  const outgoingList = outgoingRequests
+    .filter((req) => req.status === "PENDING")
+    .map(formatOutgoingRequestItem);
+  const communityList = availableSwaps.map(formatCommunitySwapItem);
+
   return (
     <div className="swaps-container">
-      {/*header*/}
       <div className="screen-header">
         <h2 className="screen-title">שוק החלפות תורים 🔄</h2>
       </div>
@@ -140,57 +198,36 @@ export default function Swaps({
           </div>
           <div className="offer-details">
             <div className="offer-info">
-              <span className="offer-title">
-                {getServiceName(myAppointment)} (עם{" "}
-                {getBarberName(myAppointment)})
-              </span>
-              <span className="offer-time">
-                {formatApptDate(myAppointment)} בשעה{" "}
-                {formatApptTime(myAppointment)}
-              </span>
+              <span className="offer-title">{myOfferData?.title}</span>
+              <span className="offer-time">{myOfferData?.timeDisplay}</span>
             </div>
           </div>
         </div>
       ) : (
-        <p
-          style={{
-            color: "#94a3b8",
-            fontSize: "0.875rem",
-            marginBottom: "20px",
-          }}
-        >
+        <p className="empty-notice-text">
           {myAppointment
             ? 'התור שלך עדיין לא מוצע להחלפה. לחץ "הצע להחלפה" בדף הבית כדי להציע אותו.'
             : "אין לך תור פעיל להציע להחלפה."}
         </p>
       )}
 
-      {/* 2. בקשות החלפה שקיבלתי מאחרים על ההצעה שלי */}
-      {incomingRequests.length > 0 && (
+      {/* 2. בקשות החלפה שקיבלתי מאחרים */}
+      {incomingList.length > 0 && (
         <>
           <div className="section-label">
             <Clock size={18} />
             <span>בקשות החלפה שקיבלת</span>
           </div>
           <div className="swaps-list">
-            {incomingRequests.map((req) => {
-              const requesterName = getUserDisplayName(req.requester);
-              const offered = req.offeredAppointment;
+            {incomingList.map((req) => {
               const isBusy = actionLoadingId === req.id;
-
               return (
                 <div key={req.id} className="swap-item-card">
                   <div className="user-swap-info">
-                    <div className="avatar-circle">
-                      {requesterName.charAt(0)}
-                    </div>
+                    <div className="avatar-circle">{req.initial}</div>
                     <div className="swap-text">
-                      <span className="user-name">
-                        {requesterName} מציע/ה • {getServiceName(offered)}
-                      </span>
-                      <span className="swap-time-badge">
-                        {formatApptDate(offered)} בשעה {formatApptTime(offered)}
-                      </span>
+                      <span className="user-name">{req.title}</span>
+                      <span className="swap-time-badge">{req.timeDisplay}</span>
                     </div>
                   </div>
 
@@ -223,31 +260,23 @@ export default function Swaps({
         </>
       )}
 
-      {/* 3. בקשות החלפה שאני שלחתי וממתינות לאישור */}
-      {outgoingRequests.length > 0 && (
+      {/* 3. בקשות החלפה שאני שלחתי */}
+      {outgoingList.length > 0 && (
         <>
           <div className="section-label">
             <RefreshCw size={18} />
             <span>הבקשות שלך הממתינות לאישור</span>
           </div>
           <div className="swaps-list">
-            {outgoingRequests.map((req) => {
-              const targetAppt = req.swapOffer?.appointment;
-              const ownerName = getUserDisplayName(targetAppt?.user);
+            {outgoingList.map((req) => {
               const isBusy = actionLoadingId === req.id;
-
               return (
                 <div key={req.id} className="swap-item-card">
                   <div className="user-swap-info">
-                    <div className="avatar-circle">{ownerName.charAt(0)}</div>
+                    <div className="avatar-circle">{req.initial}</div>
                     <div className="swap-text">
-                      <span className="user-name">
-                        {ownerName} • {getServiceName(targetAppt)}
-                      </span>
-                      <span className="swap-time-badge">
-                        {formatApptDate(targetAppt)} בשעה{" "}
-                        {formatApptTime(targetAppt)}
-                      </span>
+                      <span className="user-name">{req.title}</span>
+                      <span className="swap-time-badge">{req.timeDisplay}</span>
                     </div>
                   </div>
 
@@ -277,36 +306,21 @@ export default function Swaps({
       </div>
 
       {loading ? (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            color: "#64748b",
-            margin: "16px 0",
-          }}
-        >
+        <div className="loading-state-row">
           <Loader2 className="spinner" size={20} />
           <span>טוען תורים זמינים...</span>
         </div>
-      ) : availableSwaps.length > 0 ? (
+      ) : communityList.length > 0 ? (
         <div className="swaps-list">
-          {availableSwaps.map((item) => {
-            const appt = item.appointment || item;
+          {communityList.map((item) => {
             const isPending = pendingSwapId === item.id;
-            const userName = getUserDisplayName(appt.user);
-
             return (
               <div key={item.id} className="swap-item-card">
                 <div className="user-swap-info">
-                  <div className="avatar-circle">{userName.charAt(0)}</div>
+                  <div className="avatar-circle">{item.initial}</div>
                   <div className="swap-text">
-                    <span className="user-name">
-                      {userName} • {getServiceName(appt)}
-                    </span>
-                    <span className="swap-time-badge">
-                      {formatApptDate(appt)} בשעה {formatApptTime(appt)}
-                    </span>
+                    <span className="user-name">{item.title}</span>
+                    <span className="swap-time-badge">{item.timeDisplay}</span>
                   </div>
                 </div>
 
@@ -318,7 +332,7 @@ export default function Swaps({
                 ) : (
                   <button
                     className="request-swap-btn"
-                    onClick={() => onRequestSwap(item)}
+                    onClick={() => onRequestSwap(item.raw)}
                     disabled={!myAppointment || !myAppointment.isUpForSwap}
                     title={
                       !myAppointment?.isUpForSwap
@@ -335,7 +349,7 @@ export default function Swaps({
           })}
         </div>
       ) : (
-        <p style={{ color: "#94a3b8", fontSize: "0.875rem", margin: "16px 0" }}>
+        <p className="empty-notice-text">
           אין כרגע תורים מוצעים להחלפה מהקהילה.
         </p>
       )}

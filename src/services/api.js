@@ -69,6 +69,22 @@ export const cancelAppointmentApi = async (appointmentId) => {
   return parseResponse(res);
 };
 
+// שליפת הגדרות שעות הפעילות של העסק
+export const getBusinessSettingsApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/settings`);
+  return parseResponse(res);
+};
+
+// עדכון הגדרות שעות הפעילות ומרווח התורים (למנהל בלבד)
+export const updateBusinessSettingsApi = async (settingsPayload) => {
+  const res = await fetch(`${BASE_URL}/business/settings`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(settingsPayload),
+  });
+  return parseResponse(res);
+};
+
 // 3. החלפות תורים
 export const toggleSwapOfferApi = async (appointmentId) => {
   const res = await fetch(`${BASE_URL}/appointments/swap/toggle`, {
@@ -148,7 +164,7 @@ export const getPublicProvidersApi = async () => {
   return parseResponse(res);
 };
 
-// שליפת יומן תורים של העסק (עם סינון תאריך/ספר)
+/// שליפת יומן תורים / שעות תפוסות (פתוח ללקוח לבדיקת זמינות)
 export const getBusinessAppointmentsApi = async (date, providerId) => {
   const params = new URLSearchParams();
   if (date) params.append("date", date);
@@ -156,9 +172,6 @@ export const getBusinessAppointmentsApi = async (date, providerId) => {
 
   const res = await fetch(
     `${BASE_URL}/business/appointments?${params.toString()}`,
-    {
-      headers: getAuthHeaders(),
-    },
   );
   return parseResponse(res);
 };
@@ -200,14 +213,10 @@ export const blockTimeRangeApi = async (payload) => {
   return parseResponse(res);
 };
 
-// שליפת ימים חסומים ע"י בעל העסק (לצורך הצגה ביומן)
+// שליפת ימי חופש / חסימות יום (פתוח ללקוח)
 export const getBlockedDaysApi = async (date) => {
-  const token = localStorage.getItem("token");
   const res = await fetch(
     `${BASE_URL}/business/blocked-days${date ? `?date=${date}` : ""}`,
-    {
-      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-    },
   );
   return parseResponse(res);
 };
@@ -281,6 +290,39 @@ export const createProviderApi = async (payload) => {
 // מחיקת ספר מהצוות
 export const deleteProviderApi = async (providerId) => {
   const res = await fetch(`${BASE_URL}/business/providers/${providerId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
+// שליפת הודעת מערכת פעילה (למסך הלקוח)
+export const getActiveBroadcastApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/broadcasts/active`);
+  return parseResponse(res);
+};
+
+// שליפת כל ההודעות (למנהל)
+export const getAllBroadcastsApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/broadcasts`, {
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
+// יצירת הודעת מערכת (למנהל)
+export const createBroadcastApi = async (message) => {
+  const res = await fetch(`${BASE_URL}/business/broadcasts`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ message }),
+  });
+  return parseResponse(res);
+};
+
+// מחיקת הודעת מערכת
+export const deleteBroadcastApi = async (id) => {
+  const res = await fetch(`${BASE_URL}/business/broadcasts/${id}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

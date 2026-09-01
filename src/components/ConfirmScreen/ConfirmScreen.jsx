@@ -7,6 +7,7 @@ import {
   RefreshCw,
   ArrowDown,
 } from "lucide-react";
+import { extractTimeFromIso } from "../../utils/dateUtils";
 import "./ConfirmScreen.css";
 
 export default function ConfirmScreen({
@@ -24,18 +25,21 @@ export default function ConfirmScreen({
   };
 
   // תמיכה גם בתורים אמיתיים מהשרת (dateTime) וגם בפורמט מקומי (date/time)
-  const formatApptDate = (appt) =>
-    appt?.dateTime
-      ? new Date(appt.dateTime).toLocaleDateString("he-IL")
-      : appt?.date || "";
+  const formatApptDate = (appt) => {
+    if (
+      appt?.dateTime &&
+      typeof appt.dateTime === "string" &&
+      appt.dateTime.includes("T")
+    ) {
+      const [datePart] = appt.dateTime.split("T");
+      const [year, month, day] = datePart.split("-");
+      return `${day}/${month}/${year}`;
+    }
+    return appt?.date || "";
+  };
 
   const formatApptTime = (appt) =>
-    appt?.dateTime
-      ? new Date(appt.dateTime).toLocaleTimeString("he-IL", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : appt?.time || "";
+    appt?.dateTime ? extractTimeFromIso(appt.dateTime) : appt?.time || "";
 
   return (
     <div className="confirm-screen-container">
@@ -104,8 +108,7 @@ export default function ConfirmScreen({
             <div className="swap-box current">
               <span className="summary-label">התור הנוכחי שאתה מוסר:</span>
               <span className="summary-value">
-                {formatApptDate(data.myAppt)} בשעה{" "}
-                {formatApptTime(data.myAppt)}
+                {formatApptDate(data.myAppt)} בשעה {formatApptTime(data.myAppt)}
               </span>
             </div>
 

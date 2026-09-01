@@ -6,9 +6,9 @@ import {
   XCircle,
   Calendar,
 } from "lucide-react";
+import { extractTimeFromIso } from "../../utils/dateUtils";
 import "./MyAppointments.css";
 
-// פונקציות עזר דינמיות לחילוץ בטוח של שדות התור
 const getServiceName = (appt) =>
   appt?.service?.name ||
   (typeof appt?.service === "string" ? appt.service : "תספורת");
@@ -25,18 +25,21 @@ const getImageUrl = (appt) =>
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
 
 const formatApptDate = (appt) => {
-  if (appt?.dateTime) {
-    return new Date(appt.dateTime).toLocaleDateString("he-IL");
+  if (
+    appt?.dateTime &&
+    typeof appt.dateTime === "string" &&
+    appt.dateTime.includes("T")
+  ) {
+    const [datePart] = appt.dateTime.split("T");
+    const [year, month, day] = datePart.split("-");
+    return `${day}/${month}/${year}`;
   }
   return appt?.date || "";
 };
 
 const formatApptTime = (appt) => {
   if (appt?.dateTime) {
-    return new Date(appt.dateTime).toLocaleTimeString("he-IL", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return extractTimeFromIso(appt.dateTime);
   }
   return appt?.time || "";
 };
@@ -57,7 +60,7 @@ export default function MyAppointments({
         <h2 className="screen-title">התורים שלי 📅</h2>
       </div>
 
-      {/* סרגל לשוניות: תור עדכני / תורים קודמים */}
+      {/* סרגל לשוניות */}
       <div className="appts-tabs-bar">
         <button
           className={`tab-btn ${activeTab === "upcoming" ? "active" : ""}`}

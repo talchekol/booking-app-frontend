@@ -48,6 +48,17 @@ export default function App() {
     }
   });
 
+  // State לניהול מודל התראות (Alert Modal) – פתיחה וסגירה עם כותרת והודעה
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const showAlert = (title, message) => {
+    setAlertModal({ isOpen: true, title, message });
+  };
+
   // ניהול השלב הנוכחי בתהליך קביעת התור
   // 'home' | 'select-service' | 'select-barber' | 'select-datetime' | 'confirm'
   const [currentTab, setCurrentTab] = useState("home");
@@ -72,6 +83,26 @@ export default function App() {
     if (user && user.role !== "ADMIN") {
       loadAppointments();
     }
+  }, [user]);
+
+  // 👈 רענון התורים כשחוזרים לטאב/לחלון - כדי שהצד שקיבל את ההחלפה
+  // (ולא ביצע בעצמו פעולה) יראה את השינוי בלי צורך ברענון ידני של הדף
+  useEffect(() => {
+    if (!user || user.role === "ADMIN") return;
+
+    const handleFocusRefresh = () => {
+      if (document.visibilityState === "visible") {
+        loadAppointments();
+      }
+    };
+
+    window.addEventListener("focus", handleFocusRefresh);
+    document.addEventListener("visibilitychange", handleFocusRefresh);
+
+    return () => {
+      window.removeEventListener("focus", handleFocusRefresh);
+      document.removeEventListener("visibilitychange", handleFocusRefresh);
+    };
   }, [user]);
 
   const loadAppointments = async () => {
@@ -109,7 +140,7 @@ export default function App() {
   // אישור סופי של קביעת תור מול השרת
   const handleFinalConfirm = async (finalData) => {
     try {
-      // הרכבת מחרוזת תאריך ושעה ישירה ב-UTC
+      // הרכבת מחרוזת ישירה ששומרת על השעה המדויקת ללא הסטת אזור זמן
       const dateTimeUtc = `${finalData.date}T${finalData.time}:00.000Z`;
 
       // ראו הערת TODO למעלה - מזהים קבועים עד שבחירת השירות/הספר תתחבר ל-DB אמיתי
@@ -129,8 +160,11 @@ export default function App() {
       // מעבר למסך ההצלחה
       setBookingStep("success");
     } catch (err) {
-      console.error("שגיאה ביצירת התור בשרת:", err);
-      alert(err.message || "אירעה שגיאה בקביעת התור, אנא נסה שוב");
+      console.error("שגיאה בקביעת התור:", err);
+      showAlert(
+        "לא ניתן לקבוע תור",
+        err.message || "כבר קיים לך תור עתידי במערכת או שהשעה נתפסה.",
+      );
     }
   };
 
@@ -300,6 +334,7 @@ export default function App() {
           {/* 👈 שלב 4: בחירת תאריך ושעה */}
           {bookingStep === "select-datetime" && (
             <SelectDateTime
+              selectedBarber={selectedBookingData.barber}
               onSelectDateTime={handleSelectDateTime}
               onBack={() => setBookingStep("select-barber")}
             />
@@ -392,6 +427,27 @@ export default function App() {
               </button>
             </nav>
           )}
+        </div>
+      )}
+      {/* מודאל התראות מעוצב ללקוח */}
+      {alertModal.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-icon-header">⚠️</div>
+            <h3 className="modal-title">{alertModal.title}</h3>
+            <p className="modal-description">{alertModal.message}</p>
+            <div className="modal-actions">
+              <button
+                onClick={() =>
+                  setAlertModal({ isOpen: false, title: "", message: "" })
+                }
+                className="cta-button"
+                style={{ width: "100%", marginTop: "10px" }}
+              >
+                הבנתי, תודה
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

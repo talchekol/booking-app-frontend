@@ -9,7 +9,14 @@ import {
   blockFullDayApi,
   unblockFullDayApi,
   unblockAppointmentApi,
+  getBusinessSettingsApi,
+  updateBusinessSettingsApi,
 } from "../../../services/api";
+import {
+  getLocalDateString,
+  extractTimeFromIso,
+  getTimeRangeDisplay,
+} from "../../../utils/dateUtils";
 
 const STATUS_CYCLE = ["CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
 const STATUS_LABELS = {
@@ -26,8 +33,15 @@ export default function CalendarTab({ services = [], providers = [] }) {
   const [loading, setLoading] = useState(false);
 
   // מודלים וטפסים
-  const [activeModal, setActiveModal] = useState(null); // 'walkin' | 'block-hour' | 'block-day' | null
-  const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
+  const [activeModal, setActiveModal] = useState(null); // 'walkin' | 'block-hour' | 'block-day' | 'settings' | null
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  // State הגדרות שעות ומרווחים
+  const [businessSettings, setBusinessSettings] = useState({
+    openTime: "09:00",
+    closeTime: "19:30",
+    slotInterval: 30,
+  });
 
   // State תור ידני
   const [walkIn, setWalkIn] = useState({
@@ -59,7 +73,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
   };
 
   const getDateString = (offset) => {
-    return getTargetDate(offset).toISOString().split("T")[0];
+    return getLocalDateString(getTargetDate(offset));
   };
 
   const getFormattedHebrewDate = (offset) => {
@@ -93,6 +107,25 @@ export default function CalendarTab({ services = [], providers = [] }) {
     loadData();
   }, [dateOffset]);
 
+  // טעינת הגדרות שעות הפעילות של העסק
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getBusinessSettingsApi();
+        if (data) {
+          setBusinessSettings({
+            openTime: data.openTime || "09:00",
+            closeTime: data.closeTime || "19:30",
+            slotInterval: data.slotInterval || 30,
+          });
+        }
+      } catch (e) {
+        console.error("שגיאה בטעינת הגדרות עסק:", e);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   // שינוי סטטוס תור רגיל
   const handleCycleStatus = async (apt) => {
     if (apt.service?.name?.startsWith("חסום")) return;
@@ -109,10 +142,10 @@ export default function CalendarTab({ services = [], providers = [] }) {
     }
   };
 
-  // ביטול חסימת שעה בודדת
+  // ביטול חסימת שעה בודדת או טווח
   const handleUnblockHour = (apt) => {
     setConfirmModal({
-      message: "האם לבטל את החסימה ולפתוח את השעה הזו לתורים?",
+      message: "האם לבטל את החסימה ולפתוח את טווח השעות הזה לתורים?",
       onConfirm: async () => {
         try {
           await unblockAppointmentApi(apt.id);
@@ -178,38 +211,57 @@ export default function CalendarTab({ services = [], providers = [] }) {
     }
   };
 
-  // שמירת חסימת שעות
+  // שמירת חסימת שעות (מהירה עם סגירת מודאל מיידית)
   const handleSaveBlockHour = async () => {
     const dateStr = getDateString(dateOffset);
+    const payload = {
+      date: dateStr,
+      startTime: blockHour.startTime,
+      endTime: blockHour.endTime,
+      providerId: blockHour.providerId || undefined,
+      reason: blockHour.reason,
+    };
+
+    setActiveModal(null);
     try {
-      await blockTimeRangeApi({
-        date: dateStr,
-        startTime: blockHour.startTime,
-        endTime: blockHour.endTime,
-        providerId: blockHour.providerId || undefined,
-        reason: blockHour.reason,
-      });
-      //
-      setActiveModal(null);
+      await blockTimeRangeApi(payload);
       loadData();
     } catch (err) {
       alert(err.message || "שגיאה בחסימת השעות");
+      loadData();
     }
   };
 
   // שמירת חסימת יום
   const handleSaveBlockDay = async () => {
     const dateStr = getDateString(dateOffset);
+    const payload = {
+      date: dateStr,
+      providerId: blockDay.providerId || undefined,
+      reason: blockDay.reason,
+    };
+
+    setActiveModal(null);
     try {
-      await blockFullDayApi({
-        date: dateStr,
-        providerId: blockDay.providerId || undefined,
-        reason: blockDay.reason,
-      });
-      setActiveModal(null);
+      await blockFullDayApi(payload);
       loadData();
     } catch (err) {
       alert(err.message || "שגיאה בחסימת היום");
+      loadData();
+    }
+  };
+
+  // שמירת הגדרות שעות פעילות ומרווח
+  const handleSaveBusinessSettings = async () => {
+    const previousSettings = { ...businessSettings };
+    setActiveModal(null);
+
+    try {
+      await updateBusinessSettingsApi(businessSettings);
+    } catch (err) {
+      console.error("שגיאה בשמירת הגדרות עסק בשרת:", err);
+      setBusinessSettings(previousSettings);
+      alert(err.message || "אירעה שגיאה בשמירת הגדרות העסק בשרת.");
     }
   };
 
@@ -254,6 +306,14 @@ export default function CalendarTab({ services = [], providers = [] }) {
             className="btn-secondary"
           >
             חסימת יום
+          </button>
+          <button
+            onClick={() =>
+              setActiveModal(activeModal === "settings" ? null : "settings")
+            }
+            className="btn-secondary"
+          >
+            ⚙️ שעות ומרווח
           </button>
 
           <button
@@ -462,35 +522,117 @@ export default function CalendarTab({ services = [], providers = [] }) {
         </div>
       )}
 
+      {/* 4. טופס הגדרת שעות פעילות ומרווח */}
+      {activeModal === "settings" && (
+        <div className="form-card">
+          <div className="form-card-title">הגדרת שעות פעילות ומרווחי תורים</div>
+          <div className="form-grid">
+            <div>
+              <label style={{ fontSize: "12px", color: "#64748b" }}>
+                שעת פתיחה:
+              </label>
+              <input
+                type="time"
+                value={businessSettings.openTime}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    openTime: e.target.value,
+                  })
+                }
+                className="admin-input"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: "12px", color: "#64748b" }}>
+                שעת סגירה:
+              </label>
+              <input
+                type="time"
+                value={businessSettings.closeTime}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    closeTime: e.target.value,
+                  })
+                }
+                className="admin-input"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: "12px", color: "#64748b" }}>
+                מרווח בין תורים:
+              </label>
+              <select
+                value={businessSettings.slotInterval}
+                onChange={(e) =>
+                  setBusinessSettings({
+                    ...businessSettings,
+                    slotInterval: Number(e.target.value),
+                  })
+                }
+                className="admin-input"
+              >
+                <option value={15}>15 דקות</option>
+                <option value={20}>20 דקות</option>
+                <option value={30}>30 דקות</option>
+                <option value={45}>45 דקות</option>
+                <option value={60}>שעה (60 דקות)</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-actions">
+            <button
+              onClick={handleSaveBusinessSettings}
+              className="btn-primary"
+            >
+              שמור הגדרות
+            </button>
+            <button onClick={() => setActiveModal(null)} className="btn-ghost">
+              ביטול
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* רשימת התורים ביומן */}
       <div className="table-card">
         {loading ? (
           <div className="empty-state">טוען יומן תורים...</div>
         ) : appointments.length > 0 ? (
           appointments.map((apt) => {
-            const time = apt.dateTime
-              ? new Date(apt.dateTime).toLocaleTimeString("he-IL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "UTC",
-                })
-              : "--:--";
-
             const isBlock = apt.service?.name?.startsWith("חסום");
+
+            // חישוב טווח שעות מלא (למשל: "12:00 - 14:00") עבור חסימות
+            const timeDisplay =
+              isBlock && apt.service?.durationMin
+                ? getTimeRangeDisplay(apt.dateTime, apt.service.durationMin)
+                : extractTimeFromIso(apt.dateTime);
+
             const clientName = isBlock
               ? "שעה חסומה 🔒"
               : apt.user?.firstName
                 ? `${apt.user.firstName} ${apt.user.lastName || ""}`.trim()
                 : "לקוח מזדמן";
 
-            const providerName = apt.provider?.name || "—";
+            // אם בחסימה לא הוגדר ספר ספציפי, יוצג "כל הספרים"
+            const providerName =
+              apt.provider?.name || (isBlock ? "כל הספרים" : "—");
 
             return (
               <div
                 key={apt.id}
                 className={`appointment-row ${isBlock ? "row-blocked" : ""}`}
               >
-                <div className="apt-time">{time}</div>
+                <div
+                  className="apt-time"
+                  style={{
+                    direction: "ltr",
+                    minWidth: isBlock ? "105px" : "auto",
+                  }}
+                >
+                  {timeDisplay}
+                </div>
                 <div className="apt-info">
                   <div className="apt-client">{clientName}</div>
                   <div className="apt-service">

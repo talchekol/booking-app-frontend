@@ -1,98 +1,92 @@
 import React, { useState, useEffect } from "react";
-import { Repeat, Bell, Megaphone, CheckCircle2, Clock } from "lucide-react";
+import {
+  Repeat,
+  Bell,
+  Megaphone,
+  Loader2,
+  Check,
+  X,
+  CheckCircle2,
+} from "lucide-react";
 import "./Messages.css";
 import {
   getMySwapRequestsApi,
   approveSwapRequestApi,
   rejectSwapRequestApi,
+  getActiveBroadcastApi,
 } from "../../services/api";
-import { Loader2, Check, X } from "lucide-react";
+import { extractTimeFromIso } from "../../utils/dateUtils";
 
-const formatApptDateTime = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const date = d.toLocaleDateString("he-IL");
-  const time = d.toLocaleTimeString("he-IL", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${date} בשעה ${time}`;
+// פירמוט ישיר של מחרוזת ה-ISO ללא הזזת שעות
+const formatDateTime = (isoString) => {
+  if (!isoString || typeof isoString !== "string" || !isoString.includes("T")) {
+    return "";
+  }
+  const [datePart] = isoString.split("T");
+  const [year, month, day] = datePart.split("-");
+  const time = extractTimeFromIso(isoString);
+  return `${day}/${month}/${year} בשעה ${time}`;
 };
 
-export default function Messages() {
-  const [activeTab, setActiveTab] = useState("swaps"); // 'swaps' | 'system'
+const formatIncomingItem = (req) => ({
+  id: req.id,
+  status: req.status,
+  senderName: req.requester?.firstName || "לקוח/ה",
+  offeredService: req.offeredAppointment?.service?.name || "תספורת",
+  offeredTime: formatDateTime(req.offeredAppointment?.dateTime),
+  myTime: formatDateTime(req.ownerAppointment?.dateTime),
+});
+
+const formatOutgoingItem = (req) => ({
+  id: req.id,
+  status: req.status,
+  targetTime: formatDateTime(req.ownerAppointment?.dateTime),
+  ownerName: req.owner?.firstName || "הצד השני",
+});
+
+export default function Messages({ onAppointmentUpdated }) {
+  const [activeTab, setActiveTab] = useState("swaps");
   const [swapRequests, setSwapRequests] = useState({
     incoming: [],
     outgoing: [],
   });
+  const [broadcastNotice, setBroadcastNotice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  // נתוני דמו של הודעות החלפה
-  const swapNotifications = [
-    {
-      id: 1,
-      title: "בקשת החלפה חדשה 🔄",
-      text: "עידו לוי מעוניין להחליף איתך תור לתאריך 04/08/2026 בשעה 18:00.",
-      time: "לפני 10 דקות",
-      unread: true,
-      type: "swap",
-    },
-    {
-      id: 2,
-      title: "ההצעה שלך פורסמה!",
-      text: "התור שלך בתאריך 02/08/2026 בשעה 09:00 הוצג בהצלחה בשוק ההחלפות.",
-      time: "לפני שעה",
-      unread: false,
-      type: "swap",
-    },
-  ];
-
-  // נתוני דמו של התראות מערכת והודעות מהמספרה
-  const systemNotifications = [
-    {
-      id: 101,
-      title: "התור נקבע בהצלחה! 🎉",
-      text: "נקבע לך תור לתספורת גברים עם דניאל לתאריך 02/08/2026 בשעה 09:00.",
-      time: "אתמול",
-      unread: false,
-      type: "system",
-    },
-    {
-      id: 102,
-      title: "עדכון חגים מהמספרה ✂️",
-      text: "לקוחות יקרים, בערב ראש השנה המספרה תפעל במתכונת מורחבת. מומלץ להקדים ולקבוע תורים!",
-      time: "לפני 3 ימים",
-      unread: false,
-      type: "broadcast",
-    },
-  ];
-
-  // שליפת בקשות החלפה חיות מהשרת
-  const loadSwapRequests = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const data = await getMySwapRequestsApi();
-      setSwapRequests(data || { incoming: [], outgoing: [] });
+      const [swapsData, broadcastData] = await Promise.all([
+        getMySwapRequestsApi().catch(() => ({ incoming: [], outgoing: [] })),
+        getActiveBroadcastApi().catch(() => null),
+      ]);
+      setSwapRequests(swapsData || { incoming: [], outgoing: [] });
+      setBroadcastNotice(broadcastData);
     } catch (err) {
-      console.error("שגיאה בטעינת הודעות החלפה:", err.message);
+      console.error("Error loading messages:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadSwapRequests();
+    loadData();
   }, []);
 
-  // אישור החלפה
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);
     try {
       await approveSwapRequestApi(requestId);
-      alert("ההחלפה אושרה בהצלחה! התור עודכן.");
-      await loadSwapRequests();
-      if (onAppointmentUpdated) onAppointmentUpdated();
+      alert("ההחלפה אושרה בהצלחה! התורים עודכנו אצל שניכם.");
+
+      // 1. ריענון הנתונים במסך ההודעות
+      await loadData();
+
+      // 2. ריענון ה-State של כל האפליקציה (התור העדכני של הלקוח)
+      if (typeof onAppointmentUpdated === "function") {
+        await onAppointmentUpdated();
+      }
     } catch (err) {
       alert(err.message || "שגיאה באישור ההחלפה");
     } finally {
@@ -100,12 +94,11 @@ export default function Messages() {
     }
   };
 
-  // דחיית החלפה
   const handleReject = async (requestId) => {
     setActionLoadingId(requestId);
     try {
       await rejectSwapRequestApi(requestId);
-      await loadSwapRequests();
+      await loadData();
     } catch (err) {
       alert(err.message || "שגיאה בדחיית ההחלפה");
     } finally {
@@ -113,7 +106,11 @@ export default function Messages() {
     }
   };
 
-  const incomingCount = swapRequests.incoming?.length || 0;
+  const incomingList = (swapRequests.incoming || []).map(formatIncomingItem);
+  const outgoingList = (swapRequests.outgoing || []).map(formatOutgoingItem);
+  const pendingCount = incomingList.filter(
+    (item) => item.status === "PENDING",
+  ).length;
 
   return (
     <div className="messages-container">
@@ -128,8 +125,8 @@ export default function Messages() {
         >
           <Repeat size={16} />
           <span>עדכוני החלפות</span>
-          {incomingCount > 0 && (
-            <span className="incoming-badge">{incomingCount}</span>
+          {pendingCount > 0 && (
+            <span className="incoming-badge">{pendingCount}</span>
           )}
         </button>
         <button
@@ -138,6 +135,7 @@ export default function Messages() {
         >
           <Bell size={16} />
           <span>התראות מערכת</span>
+          {broadcastNotice && <span className="incoming-dot" />}
         </button>
       </div>
 
@@ -146,40 +144,45 @@ export default function Messages() {
           {loading ? (
             <div className="messages-loader">
               <Loader2 className="spinner" size={20} />
-              <span>טוען בקשות החלפה...</span>
+              <span>טוען עדכוני החלפה...</span>
             </div>
           ) : (
             <>
-              {swapRequests.incoming && swapRequests.incoming.length > 0 && (
+              {/* בקשות נכנסות */}
+              {incomingList.length > 0 && (
                 <div className="requests-group">
-                  {swapRequests.incoming.map((req) => {
-                    const senderName =
-                      req.requesterAppt?.user?.firstName || "משתמש";
-                    const offeredService =
-                      req.requesterAppt?.service?.name || "תספורת";
-                    const offeredTime = formatApptDateTime(
-                      req.requesterAppt?.dateTime,
-                    );
-                    const myTime = formatApptDateTime(req.targetAppt?.dateTime);
-
-                    return (
-                      <div key={req.id} className="message-card unread">
-                        <div className="message-icon-wrapper swap">
-                          <Repeat size={20} />
+                  <div className="group-label">בקשות שקיבלת</div>
+                  {incomingList.map((req) => (
+                    <div
+                      key={req.id}
+                      className={`message-card ${req.status === "PENDING" ? "unread" : ""}`}
+                    >
+                      <div className="message-icon-wrapper swap">
+                        <Repeat size={20} />
+                      </div>
+                      <div className="message-body message-body-full">
+                        <div className="message-title-row">
+                          <span className="message-item-title">
+                            {req.status === "APPROVED"
+                              ? `החלפת תור עם ${req.senderName} הושלמה! 🎉`
+                              : `בקשת החלפה מ${req.senderName} 🔄`}
+                          </span>
+                          <span className="message-time">
+                            {req.status === "PENDING"
+                              ? "ממתין לתשובתך"
+                              : req.status === "APPROVED"
+                                ? "אושר"
+                                : "בוטל"}
+                          </span>
                         </div>
-                        <div className="message-body message-body-full">
-                          <div className="message-title-row">
-                            <span className="message-item-title">
-                              בקשת החלפה מ{senderName} 🔄
-                            </span>
-                            <span className="message-time">ממתין לתשובתך</span>
-                          </div>
-                          <p className="message-text swap-details-text">
-                            <strong>מציע/ה בתמורה:</strong> {offeredTime} (
-                            {offeredService})<br />
-                            <strong>עבור התור שלך:</strong> {myTime}
-                          </p>
+                        <p className="message-text swap-details-text">
+                          <strong>תור מוצע:</strong> {req.offeredTime} (
+                          {req.offeredService})
+                          <br />
+                          <strong>התור שלך:</strong> {req.myTime}
+                        </p>
 
+                        {req.status === "PENDING" && (
                           <div className="message-actions-row">
                             <button
                               className="swap-approve-btn"
@@ -198,16 +201,18 @@ export default function Messages() {
                               דחייה
                             </button>
                           </div>
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {swapRequests.outgoing && swapRequests.outgoing.length > 0 && (
+              {/* בקשות יוצאות */}
+              {outgoingList.length > 0 && (
                 <div className="requests-group">
-                  {swapRequests.outgoing.map((req) => (
+                  <div className="group-label">בקשות ששלחת</div>
+                  {outgoingList.map((req) => (
                     <div key={req.id} className="message-card">
                       <div className="message-icon-wrapper swap">
                         <Repeat size={20} />
@@ -215,13 +220,20 @@ export default function Messages() {
                       <div className="message-body">
                         <div className="message-title-row">
                           <span className="message-item-title">
-                            בקשת החלפה ששלחת
+                            {req.status === "APPROVED"
+                              ? `${req.ownerName} אישר/ה את בקשת ההחלפה שלך והתורים הוחלפו בהצלחה! 🎉`
+                              : "בקשת החלפה שנשלחה"}
                           </span>
-                          <span className="message-time">{req.status}</span>
+                          <span className="message-time">
+                            {req.status === "PENDING"
+                              ? "ממתין לאישור"
+                              : req.status === "APPROVED"
+                                ? "אושר"
+                                : "נדחה"}
+                          </span>
                         </div>
                         <p className="message-text">
-                          שלחת בקשה להחלפה לתאריך{" "}
-                          {formatApptDateTime(req.targetAppt?.dateTime)}.
+                          עבור תור ב-{req.targetTime}
                         </p>
                       </div>
                     </div>
@@ -229,44 +241,32 @@ export default function Messages() {
                 </div>
               )}
 
-              {(!swapRequests.incoming || swapRequests.incoming.length === 0) &&
-                (!swapRequests.outgoing ||
-                  swapRequests.outgoing.length === 0) && (
-                  <p className="no-messages">אין בקשות החלפה פעילות כרגע.</p>
-                )}
+              {incomingList.length === 0 && outgoingList.length === 0 && (
+                <p className="no-messages">אין עדכוני החלפות כרגע.</p>
+              )}
             </>
           )}
         </div>
       )}
 
-      {}
       {activeTab === "system" && (
         <div className="messages-list">
-          {systemNotifications.length > 0 ? (
-            systemNotifications.map((msg) => (
-              <div key={msg.id} className="message-card">
-                <div
-                  className={`message-icon-wrapper ${
-                    msg.type === "broadcast" ? "broadcast" : "system"
-                  }`}
-                >
-                  {msg.type === "broadcast" ? (
-                    <Megaphone size={20} />
-                  ) : (
-                    <CheckCircle2 size={20} />
-                  )}
-                </div>
-                <div className="message-body">
-                  <div className="message-title-row">
-                    <span className="message-item-title">{msg.title}</span>
-                    <span className="message-time">{msg.time}</span>
-                  </div>
-                  <p className="message-text">{msg.text}</p>
-                </div>
+          {broadcastNotice ? (
+            <div className="message-card unread">
+              <div className="message-icon-wrapper broadcast">
+                <Megaphone size={20} />
               </div>
-            ))
+              <div className="message-body">
+                <div className="message-title-row">
+                  <span className="message-item-title">
+                    הודעת מערכת מהמספרה ✂️
+                  </span>
+                </div>
+                <p className="message-text">{broadcastNotice.message}</p>
+              </div>
+            </div>
           ) : (
-            <p className="no-messages">אין התראות מערכת כרגע.</p>
+            <p className="no-messages">אין התראות מערכת פעילות כרגע.</p>
           )}
         </div>
       )}

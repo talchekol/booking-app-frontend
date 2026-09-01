@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import {
   PlusCircle,
   Clock,
@@ -7,11 +6,31 @@ import {
   User,
   MapPin,
   Star,
-  Navigation,
   Plus,
+  XCircle,
 } from "lucide-react";
-import { XCircle } from "lucide-react";
+import { extractTimeFromIso } from "../../utils/dateUtils";
 import "./Home.css";
+
+const formatApptDate = (dateTimeStr, fallbackDate) => {
+  if (
+    dateTimeStr &&
+    typeof dateTimeStr === "string" &&
+    dateTimeStr.includes("T")
+  ) {
+    const [datePart] = dateTimeStr.split("T");
+    const [year, month, day] = datePart.split("-");
+    return `${day}/${month}/${year}`;
+  }
+  return fallbackDate || "";
+};
+
+const formatApptTime = (dateTimeStr, fallbackTime) => {
+  if (dateTimeStr) {
+    return extractTimeFromIso(dateTimeStr);
+  }
+  return fallbackTime || "";
+};
 
 export default function Home({
   user,
@@ -27,11 +46,9 @@ export default function Home({
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
 
-  // הקישורים לרשתות החברתיות (בהמשך יגיעו מה-DB)
   const instagramUrl = "https://instagram.com";
   const tiktokUrl = "https://tiktok.com";
 
-  // 👈 הופכים את reviews ל-State במקום משתנה רגיל!
   const [reviews, setReviews] = useState([
     {
       id: 1,
@@ -53,15 +70,13 @@ export default function Home({
     },
   ]);
 
-  // אישור ביטול התור
   const handleConfirmCancel = () => {
     setShowCancelModal(false);
     if (typeof onCancelAppointment === "function") {
-      onCancelAppointment(); // 👈 קורא לפונקציה מ-App.jsx שמוחקת את התור
+      onCancelAppointment();
     }
   };
 
-  // 3. הוספת הביקורת החדשה
   const handleAddReview = () => {
     if (!newComment.trim()) return;
 
@@ -74,11 +89,20 @@ export default function Home({
       comment: newComment,
     };
 
-    setReviews([newReviewItem, ...reviews]); // מוסיף לראש הרשימה
+    setReviews([newReviewItem, ...reviews]);
     setNewComment("");
     setNewRating(5);
     setShowReviewModal(false);
   };
+
+  const apptDateDisplay = formatApptDate(
+    upcomingAppt?.dateTime,
+    upcomingAppt?.date,
+  );
+  const apptTimeDisplay = formatApptTime(
+    upcomingAppt?.dateTime,
+    upcomingAppt?.time,
+  );
 
   return (
     <div className="home-container">
@@ -92,9 +116,9 @@ export default function Home({
           <User size={24} />
         </div>
       </div>
+
       {/* 2. כרטיסיית כתובת העסק וניווט מהיר */}
       <div className="business-location-card">
-        {/* חלק עליון: כתובת העסק בולטת */}
         <div className="address-header-section">
           <div className="location-icon-bg">
             <MapPin size={24} />
@@ -105,11 +129,8 @@ export default function Home({
           </div>
         </div>
 
-        {/* שורה תחתונה: כפתורי ניווט (Waze/Maps) בצד אחד, סושיאל בצד השני */}
         <div className="location-bottom-row">
-          {/* לוגואים של Waze ו-Google Maps */}
           <div className="nav-buttons">
-            {/* Waze - לוגו רשמי מדויק */}
             <a
               href={`https://waze.com/ul?q=${encodeURIComponent(businessAddress)}&navigate=yes`}
               target="_blank"
@@ -134,7 +155,6 @@ export default function Home({
               </svg>
             </a>
 
-            {/* Google Maps Logo */}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(businessAddress)}`}
               target="_blank"
@@ -152,11 +172,9 @@ export default function Home({
             </a>
           </div>
 
-          {/* יצירת קשר */}
           <div className="social-bar">
-            {/* WhatsApp */}
             <a
-              href="https://wa.me/972500000000" // 👈 החלף במספר הווטסאפ של העסק (בפורמט בינלאומי ללא 0 בהתחלה)
+              href="https://wa.me/972500000000"
               target="_blank"
               rel="noopener noreferrer"
               className="social-btn whatsapp"
@@ -172,9 +190,8 @@ export default function Home({
               </svg>
             </a>
 
-            {/* שיחה טלפונית */}
             <a
-              href="tel:0500000000" // 👈 החלף במספר הטלפון של העסק
+              href="tel:0500000000"
               className="social-btn phone"
               title="תקשר לעסק"
             >
@@ -192,7 +209,6 @@ export default function Home({
               </svg>
             </a>
 
-            {/* רשתות חברתיות */}
             <div className="social-bar">
               <a
                 href={instagramUrl}
@@ -236,12 +252,13 @@ export default function Home({
             </div>
           </div>
         </div>
+
         {/* 3. כפתור מרכזי לקביעת תור */}
-        {/* כפתור כללי לקביעת תור/אימון/טיפול*/}
         <button onClick={onStartBooking} className="cta-button">
           <PlusCircle size={22} />
           קבע תור חדש
         </button>
+
         {/* 4. סקשיין תורים קרובים */}
         <div className="section-header">
           <h2 className="section-title">התורים הקרובים שלי</h2>
@@ -272,18 +289,13 @@ export default function Home({
                 <div className="time-badge">
                   <Clock size={14} />
                   <span>
-                    {upcomingAppt.dateTime
-                      ? new Date(upcomingAppt.dateTime).toLocaleDateString(
-                          "he-IL",
-                        )
-                      : upcomingAppt.date}
+                    {apptDateDisplay} • {apptTimeDisplay}
                   </span>
                 </div>
               </div>
             </div>
 
             <div className="card-actions">
-              {/* 👈 כפתור "ביטול תור" */}
               <button
                 className="action-btn cancel-btn"
                 onClick={() => setShowCancelModal(true)}
@@ -291,7 +303,6 @@ export default function Home({
                 <XCircle size={15} />
                 ביטול תור
               </button>
-              {/* 👈 כפתור החלפה דינמי (משתנה לפי upcomingAppt.isUpForSwap) */}
               {upcomingAppt.isUpForSwap ? (
                 <button
                   className="action-btn cancel-swap-btn"
@@ -315,7 +326,7 @@ export default function Home({
           <p className="no-appts">אין לך תורים קרובים כרגע.</p>
         )}
 
-        {/* סקשיין ביקורות משודרג */}
+        {/* סקשיין ביקורות */}
         <div className="reviews-section-header">
           <div className="reviews-title-group">
             <h2 className="section-title">מה הלקוחות אומרים ⭐</h2>
@@ -353,14 +364,14 @@ export default function Home({
             </div>
           ))}
         </div>
-        {/* 👈 6. מודאל כתיבת ביקורת חדשה */}
+
+        {/* מודאל כתיבת ביקורת חדשה */}
         {showReviewModal && (
           <div className="modal-overlay">
             <div className="modal-card">
               <h3 className="modal-title">איך הייתה החוויה שלך? ✂️</h3>
               <p className="modal-description">בחר דירוג ורשום חוות דעת קצרה</p>
 
-              {/* בחירת דירוג כוכבים בלחיצה */}
               <div className="star-rating-select">
                 {[1, 2, 3, 4, 5].map((starIndex) => (
                   <button
@@ -378,7 +389,6 @@ export default function Home({
                 ))}
               </div>
 
-              {/* שדה כתיבת הביקורת */}
               <textarea
                 placeholder="רשום את חוויית התספורת שלך..."
                 value={newComment}
@@ -406,14 +416,14 @@ export default function Home({
           </div>
         )}
 
-        {/* 6. מודאל אישור ביטול תור */}
+        {/* מודאל אישור ביטול תור */}
         {showCancelModal && (
           <div className="modal-overlay">
             <div className="modal-card">
               <h3 className="modal-title">לבטל את התור ?</h3>
               <p className="modal-description">
-                התור ב-{upcomingAppt?.date} בשעה {upcomingAppt?.time} יבוטל ולא
-                יופיע יותר ביומן שלך.
+                התור ב-{apptDateDisplay} בשעה {apptTimeDisplay} יבוטל ולא יופיע
+                יותר ביומן שלך.
               </p>
               <div className="modal-actions">
                 <button
