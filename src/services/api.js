@@ -69,9 +69,9 @@ export const cancelAppointmentApi = async (appointmentId) => {
   return parseResponse(res);
 };
 
-// שליפת הגדרות שעות הפעילות של העסק
-export const getBusinessSettingsApi = async () => {
-  const res = await fetch(`${BASE_URL}/business/settings`);
+// שליפת הגדרות שעות הפעילות של העסק (מבודד לפי slug)
+export const getBusinessSettingsApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/settings`);
   return parseResponse(res);
 };
 
@@ -95,9 +95,11 @@ export const toggleSwapOfferApi = async (appointmentId) => {
   return parseResponse(res);
 };
 
-// 4. קבלת רשימת תורים זמינים להחלפה
-export const fetchAvailableSwapsApi = async () => {
-  const res = await fetch(`${BASE_URL}/appointments/swaps/available`, {
+// 4. קבלת רשימת תורים זמינים להחלפה (מבודד לפי businessId - ה-UUID האמיתי, לא slug,
+// כי הנתיב הזה חי תחת /appointments ולא תחת /business/:slug)
+export const fetchAvailableSwapsApi = async (businessId) => {
+  const params = businessId ? `?businessId=${businessId}` : "";
+  const res = await fetch(`${BASE_URL}/appointments/swaps/available${params}`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);
@@ -152,26 +154,67 @@ export const rejectSwapRequestApi = async (requestId) => {
 // 4. שירותי ניהול עסק (Admin & Public Data)
 // ==========================================
 
-// שליפת רשימת שירותים (פתוח לכולם - גם ל-SelectService)
-export const getPublicServicesApi = async () => {
-  const res = await fetch(`${BASE_URL}/business/services`);
+// שליפת שירותים/ספרים של העסק שלי (מזוהה מהטוקן - לשימוש בפאנל הניהול)
+export const getMyServicesApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/my/services`, {
+    headers: getAuthHeaders(),
+  });
   return parseResponse(res);
 };
 
-// שליפת רשימת ספרים (פתוח לכולם - גם ל-SelectBarber)
-export const getPublicProvidersApi = async () => {
-  const res = await fetch(`${BASE_URL}/business/providers`);
+export const getMyProvidersApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/my/providers`, {
+    headers: getAuthHeaders(),
+  });
   return parseResponse(res);
 };
 
-/// שליפת יומן תורים / שעות תפוסות (פתוח ללקוח לבדיקת זמינות)
-export const getBusinessAppointmentsApi = async (date, providerId) => {
+export const getMyAppointmentsAdminApi = async (date, providerId) => {
+  const params = new URLSearchParams();
+  if (date) params.append("date", date);
+  if (providerId) params.append("providerId", providerId);
+  const res = await fetch(
+    `${BASE_URL}/business/my/appointments?${params.toString()}`,
+    { headers: getAuthHeaders() },
+  );
+  return parseResponse(res);
+};
+
+export const getMyBlockedDaysApi = async (date) => {
+  const res = await fetch(
+    `${BASE_URL}/business/my/blocked-days${date ? `?date=${date}` : ""}`,
+    { headers: getAuthHeaders() },
+  );
+  return parseResponse(res);
+};
+
+export const getMySettingsApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/my/settings`, {
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
+// שליפת רשימת שירותים (פתוח לכולם - גם ל-SelectService), מבודד לפי slug
+export const getPublicServicesApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/services`);
+  return parseResponse(res);
+};
+
+// שליפת רשימת ספרים (פתוח לכולם - גם ל-SelectBarber), מבודד לפי slug
+export const getPublicProvidersApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/providers`);
+  return parseResponse(res);
+};
+
+/// שליפת יומן תורים / שעות תפוסות (פתוח ללקוח לבדיקת זמינות), מבודד לפי slug
+export const getBusinessAppointmentsApi = async (slug, date, providerId) => {
   const params = new URLSearchParams();
   if (date) params.append("date", date);
   if (providerId) params.append("providerId", providerId);
 
   const res = await fetch(
-    `${BASE_URL}/business/appointments?${params.toString()}`,
+    `${BASE_URL}/business/${slug}/appointments?${params.toString()}`,
   );
   return parseResponse(res);
 };
@@ -213,10 +256,10 @@ export const blockTimeRangeApi = async (payload) => {
   return parseResponse(res);
 };
 
-// שליפת ימי חופש / חסימות יום (פתוח ללקוח)
-export const getBlockedDaysApi = async (date) => {
+// שליפת ימי חופש / חסימות יום (פתוח ללקוח), מבודד לפי slug
+export const getBlockedDaysApi = async (slug, date) => {
   const res = await fetch(
-    `${BASE_URL}/business/blocked-days${date ? `?date=${date}` : ""}`,
+    `${BASE_URL}/business/${slug}/blocked-days${date ? `?date=${date}` : ""}`,
   );
   return parseResponse(res);
 };
@@ -296,9 +339,9 @@ export const deleteProviderApi = async (providerId) => {
   return parseResponse(res);
 };
 
-// שליפת הודעת מערכת פעילה (למסך הלקוח)
-export const getActiveBroadcastApi = async () => {
-  const res = await fetch(`${BASE_URL}/business/broadcasts/active`);
+// שליפת הודעת מערכת פעילה (למסך הלקוח), מבודד לפי slug
+export const getActiveBroadcastApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/broadcasts/active`);
   return parseResponse(res);
 };
 
@@ -329,10 +372,79 @@ export const deleteBroadcastApi = async (id) => {
   return parseResponse(res);
 };
 
+//=========================================
 // שליפת דוחות וסטטיסטיקות (KPIs)
+//=========================================
 export const getBusinessStatsApi = async () => {
   const res = await fetch(`${BASE_URL}/business/stats`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);
+};
+
+// ==========================================
+// 5. ניהול פרופיל העסק (Admin & Public Data)
+// ==========================================
+
+// שליפת פרטי עסק ציבוריים לפי slug (עבור TenantContext בצד הלקוח - שלב 5)
+export const getPublicBusinessProfileApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/profile`);
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "שגיאה בשליפת פרטי העסק");
+  }
+  return res.json();
+};
+
+// שליפת פרטי העסק (עבור מסך הניהול - מזוהה לפי הטוקן של המנהל המחובר, לא slug)
+export const getBusinessProfileApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/my/profile`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "שגיאה בשליפת פרטי העסק");
+  }
+  return res.json();
+};
+
+// בדיקת זמינות slug בלייב (מסך הרשמת עסק חדש)
+export const checkSlugAvailabilityApi = async (slug) => {
+  const res = await fetch(
+    `${BASE_URL}/business/check-slug?slug=${encodeURIComponent(slug)}`,
+  );
+  return parseResponse(res);
+};
+
+// רישום עסק חדש למשתמש מחובר (הופך אותו ל-ADMIN, מחזיר טוקן חדש)
+export const registerBusinessApi = async (payload) => {
+  const res = await fetch(`${BASE_URL}/business/register`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(res);
+};
+
+// עדכון פרטי העסק (עבור שמירת הטופס מפאנל הניהול)
+export const updateBusinessProfileApi = async (profileData) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/business/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(profileData),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "שגיאה בעדכון פרטי העסק");
+  }
+
+  return res.json();
 };

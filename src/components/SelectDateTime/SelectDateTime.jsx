@@ -6,6 +6,7 @@ import {
   getBusinessSettingsApi,
 } from "../../services/api";
 import { getLocalDateString, extractTimeFromIso } from "../../utils/dateUtils";
+import { useTenant } from "../../context/TenantContext";
 import "./SelectDateTime.css";
 
 // יצירת שעות דינמיות לפי הגדרות בעל העסק
@@ -38,6 +39,7 @@ export default function SelectDateTime({
   onSelectDateTime,
   onBack,
 }) {
+  const { slug } = useTenant();
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
   const [selectedTime, setSelectedTime] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -70,14 +72,16 @@ export default function SelectDateTime({
         const providerId = selectedBarber?.id;
 
         const [settings, appointments, blockedDays] = await Promise.all([
-          getBusinessSettingsApi().catch(() => ({
+          getBusinessSettingsApi(slug).catch(() => ({
             openTime: "09:00",
             closeTime: "19:30",
             slotInterval: 30,
             bookingOpenUntil: null,
           })),
-          getBusinessAppointmentsApi(selectedDate, providerId).catch(() => []),
-          getBlockedDaysApi(selectedDate).catch(() => []),
+          getBusinessAppointmentsApi(slug, selectedDate, providerId).catch(
+            () => [],
+          ),
+          getBlockedDaysApi(slug, selectedDate).catch(() => []),
         ]);
 
         // 1. בדיקת חסימת שבוע שלא פורסם
@@ -149,7 +153,7 @@ export default function SelectDateTime({
     };
 
     fetchAvailability();
-  }, [selectedDate, selectedBarber]);
+  }, [selectedDate, selectedBarber, slug]);
 
   const handleNext = () => {
     if (selectedDate && selectedTime) {

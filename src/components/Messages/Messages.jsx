@@ -16,6 +16,7 @@ import {
   getActiveBroadcastApi,
 } from "../../services/api";
 import { extractTimeFromIso } from "../../utils/dateUtils";
+import { useTenant } from "../../context/TenantContext";
 
 // פירמוט ישיר של מחרוזת ה-ISO ללא הזזת שעות
 const formatDateTime = (isoString) => {
@@ -45,6 +46,7 @@ const formatOutgoingItem = (req) => ({
 });
 
 export default function Messages({ onAppointmentUpdated }) {
+  const { slug } = useTenant();
   const [activeTab, setActiveTab] = useState("swaps");
   const [swapRequests, setSwapRequests] = useState({
     incoming: [],
@@ -59,7 +61,7 @@ export default function Messages({ onAppointmentUpdated }) {
     try {
       const [swapsData, broadcastData] = await Promise.all([
         getMySwapRequestsApi().catch(() => ({ incoming: [], outgoing: [] })),
-        getActiveBroadcastApi().catch(() => null),
+        getActiveBroadcastApi(slug).catch(() => null),
       ]);
       setSwapRequests(swapsData || { incoming: [], outgoing: [] });
       setBroadcastNotice(broadcastData);
@@ -72,7 +74,7 @@ export default function Messages({ onAppointmentUpdated }) {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [slug]);
 
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);

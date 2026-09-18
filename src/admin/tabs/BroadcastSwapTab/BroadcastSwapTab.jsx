@@ -33,7 +33,7 @@ const formatSwapOfferData = (offer) => {
   };
 };
 
-export default function BroadcastSwapTab() {
+export default function BroadcastSwapTab({ businessId }) {
   const [broadcastText, setBroadcastText] = useState("");
   const [broadcastHistory, setBroadcastHistory] = useState([]);
   const [swapOffers, setSwapOffers] = useState([]);
@@ -44,7 +44,7 @@ export default function BroadcastSwapTab() {
     try {
       const [broadcasts, swaps] = await Promise.all([
         getAllBroadcastsApi().catch(() => []),
-        fetchAvailableSwapsApi().catch(() => []),
+        fetchAvailableSwapsApi(businessId).catch(() => []),
       ]);
       setBroadcastHistory(broadcasts || []);
       setSwapOffers(swaps || []);
@@ -57,7 +57,7 @@ export default function BroadcastSwapTab() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [businessId]);
 
   const handleSendBroadcast = async () => {
     if (!broadcastText.trim()) return;

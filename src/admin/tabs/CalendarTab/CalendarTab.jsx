@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./CalendarTab.css";
 import {
-  getBusinessAppointmentsApi,
+  getMyAppointmentsAdminApi,
   updateAppointmentStatusApi,
   createManualAppointmentApi,
   blockTimeRangeApi,
-  getBlockedDaysApi,
+  getMyBlockedDaysApi,
   blockFullDayApi,
   unblockFullDayApi,
   unblockAppointmentApi,
-  getBusinessSettingsApi,
+  getMySettingsApi,
   updateBusinessSettingsApi,
 } from "../../../services/api";
 import {
@@ -91,8 +91,8 @@ export default function CalendarTab({ services = [], providers = [] }) {
     try {
       const dateStr = getDateString(dateOffset);
       const [aptsData, blocksData] = await Promise.all([
-        getBusinessAppointmentsApi(dateStr),
-        getBlockedDaysApi(dateStr).catch(() => []),
+        getMyAppointmentsAdminApi(dateStr),
+        getMyBlockedDaysApi(dateStr).catch(() => []),
       ]);
       setAppointments(aptsData || []);
       setBlockedDays(blocksData || []);
@@ -111,7 +111,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const data = await getBusinessSettingsApi();
+        const data = await getMySettingsApi();
         if (data) {
           setBusinessSettings({
             openTime: data.openTime || "09:00",

@@ -7,9 +7,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getPublicServicesApi } from "../../services/api";
+import { useTenant } from "../../context/TenantContext";
 import "./SelectService.css";
 
-export default function SelectService({ onSelectService, onBack, businessId }) {
+export default function SelectService({ onSelectService, onBack }) {
+  const { slug } = useTenant();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +19,7 @@ export default function SelectService({ onSelectService, onBack, businessId }) {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const data = await getPublicServicesApi(businessId);
+        const data = await getPublicServicesApi(slug);
         // סינון שירות מערכת פנימי של "חסום" אם קיים
         const activeServices = (data || []).filter(
           (s) => !s.name?.startsWith("חסום"),
@@ -31,7 +33,7 @@ export default function SelectService({ onSelectService, onBack, businessId }) {
     };
 
     fetchServices();
-  }, [businessId]);
+  }, [slug]);
 
   return (
     <div className="select-service-container">

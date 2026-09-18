@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft, Star, Users, User } from "lucide-react";
 import "./SelectBarber.css";
 import { getPublicProvidersApi } from "../../services/api";
+import { useTenant } from "../../context/TenantContext";
 
 export default function SelectBarber({ onSelectBarber, onBack }) {
+  const { slug } = useTenant();
   const [barbers, setBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,7 +14,7 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
     const fetchBarbers = async () => {
       try {
         setLoading(true);
-        const data = await getPublicProvidersApi();
+        const data = await getPublicProvidersApi(slug);
         setBarbers(data || []);
       } catch (err) {
         console.error("שגיאה בטעינת ספרים:", err);
@@ -22,7 +24,7 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
     };
 
     fetchBarbers();
-  }, []);
+  }, [slug]);
 
   return (
     <div className="select-barber-container">

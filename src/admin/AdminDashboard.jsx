@@ -5,10 +5,8 @@ import ServicesStaffTab from "./tabs/ServicesStaffTab/ServicesStaffTab";
 import BroadcastSwapTab from "./tabs/BroadcastSwapTab/BroadcastSwapTab";
 import ReportsTab from "./tabs/ReportsTab/ReportsTab";
 import ProfileTab from "./tabs/ProfileTab/ProfileTab";
-import {
-  getPublicServicesApi,
-  getPublicProvidersApi,
-} from "../services/api";
+import { getMyServicesApi, getMyProvidersApi } from "../services/api";
+import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "calendar", icon: "📅", label: "יומן" },
@@ -19,7 +17,12 @@ const NAV_ITEMS = [
 ];
 
 // פונקציה ראשית של לוח הבקרה למנהל העסק
-export default function AdminDashboard({ businessName = "מספרת טל" }) {
+export default function AdminDashboard({
+  businessName = "מספרת טל",
+  businessInfo,
+  onBusinessUpdated,
+  onLogout,
+}) {
   const [tab, setTab] = useState("calendar");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
@@ -38,8 +41,8 @@ export default function AdminDashboard({ businessName = "מספרת טל" }) {
   const refreshBaseData = async () => {
     try {
       const [svcData, provData] = await Promise.all([
-        getPublicServicesApi(),
-        getPublicProvidersApi(),
+        getMyServicesApi(),
+        getMyProvidersApi(),
       ]);
       setServices(svcData || []);
       setProviders(provData || []);
@@ -76,6 +79,14 @@ export default function AdminDashboard({ businessName = "מספרת טל" }) {
               </div>
             ))}
           </nav>
+          {onLogout && (
+            <div className="admin-nav-item" onClick={onLogout}>
+              <span className="nav-icon">
+                <LogOut size={18} />
+              </span>
+              <span>התנתקות</span>
+            </div>
+          )}
         </aside>
       )}
 
@@ -85,6 +96,23 @@ export default function AdminDashboard({ businessName = "מספרת טל" }) {
           <header className="mobile-header">
             <div className="admin-logo">{businessName.slice(0, 1)}</div>
             <div className="business-title">{businessName}</div>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="mobile-logout-btn"
+                title="התנתקות"
+                style={{
+                  marginRight: "auto",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <LogOut size={20} />
+              </button>
+            )}
           </header>
         )}
 
@@ -98,9 +126,16 @@ export default function AdminDashboard({ businessName = "מספרת טל" }) {
             onUpdate={refreshBaseData}
           />
         )}
-        {tab === "broadcast" && <BroadcastSwapTab />}
+        {tab === "broadcast" && (
+          <BroadcastSwapTab businessId={businessInfo?.id} />
+        )}
         {tab === "reports" && <ReportsTab />}
-        {tab === "profile" && <ProfileTab businessName={businessName} />}
+        {tab === "profile" && (
+          <ProfileTab
+            businessName={businessName}
+            onBusinessUpdated={onBusinessUpdated}
+          />
+        )}
       </main>
 
       {/* Mobile Bottom Navigation */}

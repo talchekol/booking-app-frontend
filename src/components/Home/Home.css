@@ -43,6 +43,16 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
+/* שם העסק - בולט ומודרני */
+.business-name-header {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+  margin: 0;
+  line-height: 1.2;
+}
+
 /* כרטיסיית כתובת וניווט */
 .business-location-card {
   background-color: #ffffff;
@@ -88,12 +98,12 @@
   text-transform: uppercase;
 }
 
+/* הכתובת - עדינה וקריאה */
 .location-address-main {
-  font-family: "Heebo", system-ui, sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b; /* גוון אפור נקי */
+  margin: 0;
 }
 
 /* שורת הכפתורים והסושיאל - מרווחת ונוחה למגע */
@@ -416,6 +426,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 9px;
   margin-bottom: 16px;
   padding: 0 4px;
 }

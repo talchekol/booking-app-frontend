@@ -14,6 +14,7 @@ import {
   rejectSwapRequestApi,
 } from "../../services/api";
 import { extractTimeFromIso } from "../../utils/dateUtils";
+import { useTenant } from "../../context/TenantContext";
 import "./Swaps.css";
 
 // --- פונקציות עזר ועיבוד נתונים מחוץ ל-JSX ---
@@ -103,6 +104,7 @@ export default function Swaps({
   pendingSwapId,
   onSwapChanged,
 }) {
+  const { businessId } = useTenant();
   const [availableSwaps, setAvailableSwaps] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
@@ -113,7 +115,7 @@ export default function Swaps({
     setLoading(true);
     try {
       const [swaps, requests] = await Promise.all([
-        fetchAvailableSwapsApi(),
+        fetchAvailableSwapsApi(businessId),
         getMySwapRequestsApi(),
       ]);
       setAvailableSwaps(Array.isArray(swaps) ? swaps : []);
@@ -135,7 +137,7 @@ export default function Swaps({
 
   useEffect(() => {
     loadMarketSwaps();
-  }, [myAppointment?.isUpForSwap, pendingSwapId]);
+  }, [myAppointment?.isUpForSwap, pendingSwapId, businessId]);
 
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);
