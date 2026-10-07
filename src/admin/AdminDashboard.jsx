@@ -5,11 +5,13 @@ import ServicesStaffTab from "./tabs/ServicesStaffTab/ServicesStaffTab";
 import BroadcastSwapTab from "./tabs/BroadcastSwapTab/BroadcastSwapTab";
 import ReportsTab from "./tabs/ReportsTab/ReportsTab";
 import ProfileTab from "./tabs/ProfileTab/ProfileTab";
+import WeeklyPublishTab from "./tabs/WeeklyPublishTab/WeeklyPublishTab";
 import { getMyServicesApi, getMyProvidersApi } from "../services/api";
 import { LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "calendar", icon: "📅", label: "יומן" },
+  { key: "publish", icon: "🗓️", label: "פרסום שבועי" },
   { key: "services", icon: "✂️", label: "שירותים" },
   { key: "broadcast", icon: "📢", label: "הודעות" },
   { key: "reports", icon: "📊", label: "דוחות" },
@@ -19,7 +21,6 @@ const NAV_ITEMS = [
 // פונקציה ראשית של לוח הבקרה למנהל העסק
 export default function AdminDashboard({
   businessName = "מספרת טל",
-  businessInfo,
   onBusinessUpdated,
   onLogout,
 }) {
@@ -119,6 +120,7 @@ export default function AdminDashboard({
         {tab === "calendar" && (
           <CalendarTab services={services} providers={providers} />
         )}
+        {tab === "publish" && <WeeklyPublishTab providers={providers} />}
         {tab === "services" && (
           <ServicesStaffTab
             services={services}
@@ -126,9 +128,7 @@ export default function AdminDashboard({
             onUpdate={refreshBaseData}
           />
         )}
-        {tab === "broadcast" && (
-          <BroadcastSwapTab businessId={businessInfo?.id} />
-        )}
+        {tab === "broadcast" && <BroadcastSwapTab />}
         {tab === "reports" && <ReportsTab />}
         {tab === "profile" && (
           <ProfileTab

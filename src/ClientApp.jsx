@@ -10,6 +10,7 @@ import Messages from "./components/Messages/Messages";
 import MyAppointments from "./components/MyAppointments/MyAppointments";
 import Profile from "./components/Profile/Profile";
 import { useTenant } from "./context/TenantContext";
+import { useToast } from "./context/ToastContext";
 import {
   getMyAppointmentsApi,
   cancelAppointmentApi,
@@ -30,6 +31,7 @@ import "./App.css";
 // אזור הלקוח - מקונן תחת /:slug, מקבל את זהות העסק מ-TenantContext
 export default function ClientApp({ user, setUser, onLogout }) {
   const { business, businessId, loading: tenantLoading, notFound } = useTenant();
+  const { showToast } = useToast();
 
   // State לניהול מודל התראות (Alert Modal) – פתיחה וסגירה עם כותרת והודעה
   const [alertModal, setAlertModal] = useState({
@@ -61,9 +63,12 @@ export default function ClientApp({ user, setUser, onLogout }) {
   const [appointmentsHistory, setAppointmentsHistory] = useState([]);
   const [loadingAppts, setLoadingAppts] = useState(false);
 
-  // 👈 טעינת התורים מ-Neon בטעינה ראשונה וכשהמשתמש מחובר
+  // 👈 טעינת התורים מ-Neon בטעינה ראשונה וכשהמשתמש מחובר.
+  // בכוונה בלי סינון לפי role: ClientApp תמיד רץ תחת /:slug כצד לקוח - גם
+  // משתמש שהוא ADMIN של עסק אחר (או של העסק הזה עצמו) יכול להזמין כאן כלקוח
+  // לגיטימי, וחייב לראות את התורים שלו בדיוק כמו כל לקוח אחר.
   useEffect(() => {
-    if (user && user.role !== "ADMIN") {
+    if (user) {
       loadAppointments();
     }
   }, [user]);
@@ -71,7 +76,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
   // 👈 רענון התורים כשחוזרים לטאב/לחלון - כדי שהצד שקיבל את ההחלפה
   // (ולא ביצע בעצמו פעולה) יראה את השינוי בלי צורך ברענון ידני של הדף
   useEffect(() => {
-    if (!user || user.role === "ADMIN") return;
+    if (!user) return;
 
     const handleFocusRefresh = () => {
       if (document.visibilityState === "visible") {
@@ -158,7 +163,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
         loadAppointments(); // רענון מהשרת
       } catch (err) {
         console.error("שגיאה בביטול התור:", err);
-        alert(err.message || "אירעה שגיאה בביטול התור, אנא נסה שוב");
+        showToast(err.message || "אירעה שגיאה בביטול התור, אנא נסה שוב", "error");
       }
     } else {
       setUpcomingAppointment(null);
@@ -176,7 +181,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
         loadAppointments(); // רענון התור המעודכן מהשרת
       } catch (err) {
         console.error("שגיאה בריענון מצב החלפה:", err);
-        alert(err.message || "אירעה שגיאה בעדכון הצעת ההחלפה, אנא נסה שוב");
+        showToast(err.message || "אירעה שגיאה בעדכון הצעת ההחלפה, אנא נסה שוב", "error");
       }
     } else {
       const updatedAppt = {
@@ -215,7 +220,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
         localStorage.setItem("pendingSwapId", String(swapOfferId));
       } catch (err) {
         console.error("שגיאה בשליחת בקשת ההחלפה:", err);
-        alert(err.message || "אירעה שגיאה בשליחת בקשת ההחלפה, אנא נסה שוב");
+        showToast(err.message || "אירעה שגיאה בשליחת בקשת ההחלפה, אנא נסה שוב", "error");
       }
     }
 

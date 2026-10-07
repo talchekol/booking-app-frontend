@@ -15,6 +15,7 @@ import {
 } from "../../services/api";
 import { extractTimeFromIso } from "../../utils/dateUtils";
 import { useTenant } from "../../context/TenantContext";
+import { useToast } from "../../context/ToastContext";
 import "./Swaps.css";
 
 // --- פונקציות עזר ועיבוד נתונים מחוץ ל-JSX ---
@@ -105,6 +106,7 @@ export default function Swaps({
   onSwapChanged,
 }) {
   const { businessId } = useTenant();
+  const { showToast } = useToast();
   const [availableSwaps, setAvailableSwaps] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
@@ -147,7 +149,7 @@ export default function Swaps({
       if (onSwapChanged) onSwapChanged();
     } catch (err) {
       console.error("שגיאה באישור ההחלפה:", err);
-      alert(err.message || "אירעה שגיאה באישור ההחלפה, אנא נסה שוב");
+      showToast(err.message || "אירעה שגיאה באישור ההחלפה, אנא נסה שוב", "error");
     } finally {
       setActionLoadingId(null);
     }
@@ -160,7 +162,7 @@ export default function Swaps({
       await loadMarketSwaps();
     } catch (err) {
       console.error("שגיאה בעדכון בקשת ההחלפה:", err);
-      alert(err.message || "אירעה שגיאה, אנא נסה שוב");
+      showToast(err.message || "אירעה שגיאה, אנא נסה שוב", "error");
     } finally {
       setActionLoadingId(null);
     }

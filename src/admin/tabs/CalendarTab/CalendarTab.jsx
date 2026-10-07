@@ -17,6 +17,7 @@ import {
   extractTimeFromIso,
   getTimeRangeDisplay,
 } from "../../../utils/dateUtils";
+import { useToast } from "../../../context/ToastContext";
 
 const STATUS_CYCLE = ["CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
 const STATUS_LABELS = {
@@ -27,6 +28,7 @@ const STATUS_LABELS = {
 };
 
 export default function CalendarTab({ services = [], providers = [] }) {
+  const { showToast } = useToast();
   const [appointments, setAppointments] = useState([]);
   const [blockedDays, setBlockedDays] = useState([]);
   const [dateOffset, setDateOffset] = useState(0);
@@ -138,7 +140,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
         prev.map((a) => (a.id === apt.id ? { ...a, status: nextStatus } : a)),
       );
     } catch (err) {
-      alert("שגיאה בעדכון סטטוס התור");
+      showToast("שגיאה בעדכון סטטוס התור", "error");
     }
   };
 
@@ -151,7 +153,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
           await unblockAppointmentApi(apt.id);
           setAppointments((prev) => prev.filter((a) => a.id !== apt.id));
         } catch (e) {
-          alert("שגיאה בשחרור החסימה");
+          showToast("שגיאה בשחרור החסימה", "error");
         } finally {
           setConfirmModal(null);
         }
@@ -168,7 +170,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
           await unblockFullDayApi(blockRecord.id);
           setBlockedDays((prev) => prev.filter((b) => b.id !== blockRecord.id));
         } catch (e) {
-          alert("שגיאה בביטול חסימת היום");
+          showToast("שגיאה בביטול חסימת היום", "error");
         } finally {
           setConfirmModal(null);
         }
@@ -184,7 +186,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
       !walkIn.serviceId ||
       !walkIn.providerId
     ) {
-      alert("נא למלא את כל השדות לקביעת תור ידני");
+      showToast("נא למלא את כל השדות לקביעת תור ידני", "error");
       return;
     }
     const dateStr = getDateString(dateOffset);
@@ -207,7 +209,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
       });
       loadData();
     } catch (err) {
-      alert(err.message || "שגיאה בקביעת תור");
+      showToast(err.message || "שגיאה בקביעת תור", "error");
     }
   };
 
@@ -227,7 +229,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
       await blockTimeRangeApi(payload);
       loadData();
     } catch (err) {
-      alert(err.message || "שגיאה בחסימת השעות");
+      showToast(err.message || "שגיאה בחסימת השעות", "error");
       loadData();
     }
   };
@@ -246,7 +248,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
       await blockFullDayApi(payload);
       loadData();
     } catch (err) {
-      alert(err.message || "שגיאה בחסימת היום");
+      showToast(err.message || "שגיאה בחסימת היום", "error");
       loadData();
     }
   };
@@ -261,7 +263,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
     } catch (err) {
       console.error("שגיאה בשמירת הגדרות עסק בשרת:", err);
       setBusinessSettings(previousSettings);
-      alert(err.message || "אירעה שגיאה בשמירת הגדרות העסק בשרת.");
+      showToast(err.message || "אירעה שגיאה בשמירת הגדרות העסק בשרת.", "error");
     }
   };
 

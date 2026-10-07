@@ -45,8 +45,41 @@ export default function SelectDateTime({
   const [availableSlots, setAvailableSlots] = useState([]);
   const [dayBlockedReason, setDayBlockedReason] = useState(null);
   const [loading, setLoading] = useState(false);
+  // undefined = עוד לא נטען, null = מעולם לא פורסם, מחרוזת = תאריך הפרסום האחרון
+  const [bookingOpenUntil, setBookingOpenUntil] = useState(undefined);
 
-  const upcomingDays = Array.from({ length: 7 }, (_, i) => {
+  // נטען פעם אחת (לא תלוי בתאריך הנבחר) כדי לדעת עד איפה להציג כרטיסי תאריך
+  useEffect(() => {
+    let cancelled = false;
+    getBusinessSettingsApi(slug)
+      .then((s) => {
+        if (!cancelled) setBookingOpenUntil(s?.bookingOpenUntil || null);
+      })
+      .catch(() => {
+        if (!cancelled) setBookingOpenUntil(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  // מציגים מהיום ועד לתאריך שבעל העסק בפועל פרסם (bookingOpenUntil) - לא
+  // "עד שבת של השבוע הנוכחי" בלבד, כי אחרת שבוע הבא שכבר פורסם מראש לא היה
+  // מוצג ללקוח עד שהיומן "מתגלגל" אליו בפועל. MAX_LOOKAHEAD_DAYS הוא רק רשת
+  // ביטחון מפני רשימה ארוכה מדי אם פורסמו כמה שבועות קדימה בטעות.
+  const MAX_LOOKAHEAD_DAYS = 13;
+  const todayStr = getLocalDateString();
+  let dayCount = 1; // כל עוד bookingOpenUntil לא נטען - מציגים לפחות את היום
+  if (bookingOpenUntil) {
+    const diffDays = Math.round(
+      (new Date(`${bookingOpenUntil}T00:00:00Z`) -
+        new Date(`${todayStr}T00:00:00Z`)) /
+        86400000,
+    );
+    dayCount = Math.max(1, Math.min(diffDays + 1, MAX_LOOKAHEAD_DAYS));
+  }
+
+  const upcomingDays = Array.from({ length: dayCount }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     const dateStr = getLocalDateString(d);
@@ -84,9 +117,11 @@ export default function SelectDateTime({
           getBlockedDaysApi(slug, selectedDate).catch(() => []),
         ]);
 
-        // 1. בדיקת חסימת שבוע שלא פורסם
+        // 1. בדיקת חסימת שבוע שלא פורסם - ברירת המחדל היא סגור: אם בעל העסק
+        // מעולם לא פרסם שבוע (bookingOpenUntil ריק) אין להציג שום זמינות,
+        // לא "פתוח ללא הגבלה". רק תאריך שכבר פורסם בפועל נחשב זמין.
         if (
-          settings?.bookingOpenUntil &&
+          !settings?.bookingOpenUntil ||
           selectedDate > settings.bookingOpenUntil
         ) {
           setDayBlockedReason("היומן לתאריך זה טרם נפתח להזמנות ע״י בעל העסק");

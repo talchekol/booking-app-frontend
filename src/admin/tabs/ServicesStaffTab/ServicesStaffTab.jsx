@@ -6,11 +6,14 @@ import {
   createProviderApi,
   deleteProviderApi,
 } from "../../../services/api";
+import ConfirmDialog from "../../../components/ConfirmDialog/ConfirmDialog";
+import { useToast } from "../../../context/ToastContext";
 
 const PROVIDER_COLORS = ["#6D28D9", "#16A34A", "#F59E0B", "#0EA5E9"];
 
 // רכיב ניהול שירותים וצוות
 export default function ServicesStaffTab({ services, providers, onUpdate }) {
+  const { showToast } = useToast();
   const [addingService, setAddingService] = useState(false);
   const [newService, setNewService] = useState({
     name: "",
@@ -21,6 +24,9 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
   // פונקציות לניהול שירותים
   const [addingProvider, setAddingProvider] = useState(false);
   const [newProvider, setNewProvider] = useState({ name: "", imageUrl: "" });
+
+  // מודל אישור אחיד למחיקת שירות/הסרת ספר - { type: "service" | "provider", id }
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   //פונקציה לשמירת שירות חדש
   const handleSaveService = async () => {
@@ -35,19 +41,13 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
       setNewService({ name: "", duration: "", price: "" });
       onUpdate();
     } catch (err) {
-      alert("שגיאה בהוספת שירות");
+      showToast("שגיאה בהוספת שירות", "error");
     }
   };
 
   //פונקציה למחיקת שירות
-  const handleDeleteService = async (id) => {
-    if (!window.confirm("האם למחוק שירות זה?")) return;
-    try {
-      await deleteServiceApi(id);
-      onUpdate();
-    } catch (err) {
-      alert("שגיאה במחיקת שירות (ייתכן שתלויים בו תורים)");
-    }
+  const handleDeleteService = (id) => {
+    setPendingDelete({ type: "service", id });
   };
 
   //פונקציה לשמירת ספר חדש
@@ -62,18 +62,33 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
       setNewProvider({ name: "", imageUrl: "" });
       onUpdate();
     } catch (err) {
-      alert("שגיאה בהוספת ספר");
+      showToast("שגיאה בהוספת ספר", "error");
     }
   };
 
   //פונקציה להסרת ספר
-  const handleDeleteProvider = async (id) => {
-    if (!window.confirm("האם להסיר ספר זה מהצוות?")) return;
+  const handleDeleteProvider = (id) => {
+    setPendingDelete({ type: "provider", id });
+  };
+
+  // ביצוע בפועל אחרי אישור במודל
+  const handleConfirmDelete = async () => {
+    const { type, id } = pendingDelete;
+    setPendingDelete(null);
     try {
-      await deleteProviderApi(id);
+      if (type === "service") {
+        await deleteServiceApi(id);
+      } else {
+        await deleteProviderApi(id);
+      }
       onUpdate();
     } catch (err) {
-      alert("שגיאה בהסרת ספר");
+      showToast(
+        type === "service"
+          ? "שגיאה במחיקת שירות (ייתכן שתלויים בו תורים)"
+          : "שגיאה בהסרת ספר",
+        "error",
+      );
     }
   };
 
@@ -229,6 +244,21 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={
+          pendingDelete?.type === "service" ? "מחיקת שירות" : "הסרת ספר"
+        }
+        message={
+          pendingDelete?.type === "service"
+            ? "האם למחוק שירות זה? הפעולה בלתי הפיכה."
+            : "האם להסיר ספר זה מהצוות? הפעולה בלתי הפיכה."
+        }
+        confirmText={pendingDelete?.type === "service" ? "מחק" : "הסר"}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

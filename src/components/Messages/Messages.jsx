@@ -17,6 +17,7 @@ import {
 } from "../../services/api";
 import { extractTimeFromIso } from "../../utils/dateUtils";
 import { useTenant } from "../../context/TenantContext";
+import { useToast } from "../../context/ToastContext";
 
 // פירמוט ישיר של מחרוזת ה-ISO ללא הזזת שעות
 const formatDateTime = (isoString) => {
@@ -47,6 +48,7 @@ const formatOutgoingItem = (req) => ({
 
 export default function Messages({ onAppointmentUpdated }) {
   const { slug } = useTenant();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("swaps");
   const [swapRequests, setSwapRequests] = useState({
     incoming: [],
@@ -80,7 +82,7 @@ export default function Messages({ onAppointmentUpdated }) {
     setActionLoadingId(requestId);
     try {
       await approveSwapRequestApi(requestId);
-      alert("ההחלפה אושרה בהצלחה! התורים עודכנו אצל שניכם.");
+      showToast("ההחלפה אושרה בהצלחה! התורים עודכנו אצל שניכם.", "success");
 
       // 1. ריענון הנתונים במסך ההודעות
       await loadData();
@@ -90,7 +92,7 @@ export default function Messages({ onAppointmentUpdated }) {
         await onAppointmentUpdated();
       }
     } catch (err) {
-      alert(err.message || "שגיאה באישור ההחלפה");
+      showToast(err.message || "שגיאה באישור ההחלפה", "error");
     } finally {
       setActionLoadingId(null);
     }
@@ -102,7 +104,7 @@ export default function Messages({ onAppointmentUpdated }) {
       await rejectSwapRequestApi(requestId);
       await loadData();
     } catch (err) {
-      alert(err.message || "שגיאה בדחיית ההחלפה");
+      showToast(err.message || "שגיאה בדחיית ההחלפה", "error");
     } finally {
       setActionLoadingId(null);
     }

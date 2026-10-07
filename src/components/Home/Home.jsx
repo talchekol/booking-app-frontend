@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PlusCircle,
   Clock,
@@ -10,7 +10,17 @@ import {
   XCircle,
 } from "lucide-react";
 import { extractTimeFromIso } from "../../utils/dateUtils";
+import {
+  getBusinessReviewsApi,
+  createReviewApi,
+  deleteReviewApi,
+} from "../../services/api";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 import "./Home.css";
+
+const formatReviewerName = (user) =>
+  user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "לקוח";
 
 // --- פונקציות עזר מחוץ ל-JSX ---
 
@@ -27,6 +37,7 @@ const formatApptDate = (dateTimeStr, fallbackDate) => {
   return fallbackDate || "";
 };
 
+// פונקציה שמקבלת מחרוזת תאריך-שעה בפורמט ISO ומחזירה את השעה בלבד
 const formatApptTime = (dateTimeStr, fallbackTime) => {
   if (dateTimeStr) {
     return extractTimeFromIso(dateTimeStr);
@@ -34,6 +45,8 @@ const formatApptTime = (dateTimeStr, fallbackTime) => {
   return fallbackTime || "";
 };
 
+// פונקציה לבניית קישור WhatsApp תקין מהמספר שהוזן על ידי בעל העסק
+//
 const buildWhatsappUrl = (rawPhone) => {
   if (!rawPhone) return "";
   const cleaned = rawPhone.replace(/\D/g, "");
@@ -52,8 +65,10 @@ export default function Home({
   onCancelAppointment,
   onToggleSwapOffer,
 }) {
+  const { showToast } = useToast();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
 
@@ -64,26 +79,29 @@ export default function Home({
   const instagramUrl = businessInfo?.instagram?.trim() || "";
   const tiktokUrl = businessInfo?.tiktok?.trim() || "";
 
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: "אורן לוי",
-      rating: 5,
-      comment: "ספר אלוף! מדויק ברמות ויחס זהב.",
-    },
-    {
-      id: 2,
-      name: "מאור כהן",
-      rating: 5,
-      comment: "האפליקציה ממש נוחה והתספורת יצאה אש.",
-    },
-    {
-      id: 3,
-      name: "רועי מזרחי",
-      rating: 5,
-      comment: "תמיד מגיע בזמן, מקום נקי ומזמין.",
-    },
-  ]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  const slug = businessInfo?.slug;
+
+  useEffect(() => {
+    if (!slug) return;
+    setReviewsLoading(true);
+    getBusinessReviewsApi(slug)
+      .then((data) => {
+        setReviews(
+          (data || []).map((r) => ({
+            id: r.id,
+            userId: r.userId,
+            name: formatReviewerName(r.user),
+            rating: r.rating,
+            comment: r.comment,
+          })),
+        );
+      })
+      .catch((err) => console.error("שגיאה בטעינת ביקורות:", err))
+      .finally(() => setReviewsLoading(false));
+  }, [slug]);
 
   const handleConfirmCancel = () => {
     setShowCancelModal(false);
@@ -92,22 +110,50 @@ export default function Home({
     }
   };
 
-  const handleAddReview = () => {
-    if (!newComment.trim()) return;
+  const handleAddReview = async () => {
+    if (!newComment.trim() || !slug) return;
 
-    const newReviewItem = {
-      id: Date.now(),
-      name: user?.firstName
-        ? `${user.firstName} ${user.lastName || ""}`
-        : "משתמש אנונימי",
-      rating: newRating,
-      comment: newComment,
-    };
+    try {
+      const saved = await createReviewApi(slug, {
+        rating: newRating,
+        comment: newComment.trim(),
+      });
 
-    setReviews([newReviewItem, ...reviews]);
-    setNewComment("");
-    setNewRating(5);
-    setShowReviewModal(false);
+      setReviews((prev) => [
+        {
+          id: saved.id,
+          userId: saved.userId,
+          name: formatReviewerName(saved.user) || formatReviewerName(user),
+          rating: saved.rating,
+          comment: saved.comment,
+        },
+        ...prev,
+      ]);
+      setNewComment("");
+      setNewRating(5);
+      setShowReviewModal(false);
+    } catch (err) {
+      console.error("שגיאה בשמירת הביקורת:", err);
+      showToast(err.message || "לא הצלחנו לשמור את הביקורת, נסה שוב", "error");
+    }
+  };
+
+  const handleDeleteReview = (reviewId) => {
+    setReviewToDelete(reviewId);
+  };
+
+  const handleConfirmDeleteReview = async () => {
+    const reviewId = reviewToDelete;
+    setReviewToDelete(null);
+    if (!slug || !reviewId) return;
+
+    try {
+      await deleteReviewApi(slug, reviewId);
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    } catch (err) {
+      console.error("שגיאה במחיקת הביקורת:", err);
+      showToast(err.message || "לא הצלחנו למחוק את הביקורת, נסה שוב", "error");
+    }
   };
 
   const apptDateDisplay = formatApptDate(
@@ -374,13 +420,17 @@ export default function Home({
       <div className="reviews-section-header">
         <div className="reviews-title-group">
           <h2 className="section-title">מה הלקוחות אומרים ⭐</h2>
-          <div className="rating-badge-pill">
-            <span className="rating-score">
-              <Star size={12} fill="#d97706" color="#d97706" />
-              4.9
-            </span>
-            <span className="rating-count">({reviews.length} חוות דעת)</span>
-          </div>
+          {reviews.length > 0 && (
+            <div className="rating-badge-pill">
+              <span className="rating-score">
+                <Star size={12} fill="#d97706" color="#d97706" />
+                {(
+                  reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                ).toFixed(1)}
+              </span>
+              <span className="rating-count">({reviews.length} חוות דעת)</span>
+            </div>
+          )}
         </div>
 
         <button
@@ -392,21 +442,38 @@ export default function Home({
         </button>
       </div>
 
-      <div className="reviews-scroll">
-        {reviews.map((rev) => (
-          <div key={rev.id} className="review-card">
-            <div className="review-header">
-              <span className="reviewer-name">{rev.name}</span>
-              <div className="stars-row">
-                {[...Array(rev.rating)].map((_, i) => (
-                  <Star key={i} size={13} fill="#f59e0b" color="#f59e0b" />
-                ))}
+      {reviewsLoading ? (
+        <p className="no-appts">טוען ביקורות...</p>
+      ) : reviews.length > 0 ? (
+        <div className="reviews-scroll">
+          {reviews.map((rev) => (
+            <div key={rev.id} className="review-card">
+              <div className="review-header">
+                <span className="reviewer-name">{rev.name}</span>
+                <div className="review-header-actions">
+                  <div className="stars-row">
+                    {[...Array(rev.rating)].map((_, i) => (
+                      <Star key={i} size={13} fill="#f59e0b" color="#f59e0b" />
+                    ))}
+                  </div>
+                  {rev.userId && rev.userId === user?.id && (
+                    <button
+                      onClick={() => handleDeleteReview(rev.id)}
+                      className="review-delete-btn"
+                      title="מחק ביקורת"
+                    >
+                      <XCircle size={15} />
+                    </button>
+                  )}
+                </div>
               </div>
+              <p className="review-text">"{rev.comment}"</p>
             </div>
-            <p className="review-text">"{rev.comment}"</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="no-appts">אין עדיין ביקורות - היו הראשונים לכתוב!</p>
+      )}
 
       {/* מודאל כתיבת ביקורת */}
       {showReviewModal && (
@@ -485,6 +552,16 @@ export default function Home({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!reviewToDelete}
+        title="מחיקת ביקורת"
+        message="הביקורת שלך תימחק לצמיתות."
+        confirmText="כן, מחק"
+        cancelText="ביטול"
+        onConfirm={handleConfirmDeleteReview}
+        onCancel={() => setReviewToDelete(null)}
+      />
     </div>
   );
 }

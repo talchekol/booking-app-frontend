@@ -1,0 +1,219 @@
+.week-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.week-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.week-nav-btn {
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.week-nav-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
+  min-width: 110px;
+  text-align: center;
+}
+
+.week-nav-reset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  margin-right: auto;
+}
+
+.week-status-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.week-status-sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.publish-week-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.week-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.week-day-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.week-day-card.blocked {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.week-day-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.week-day-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.week-day-date {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.week-day-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.week-day-toggle.is-open {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.week-day-toggle.is-blocked {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.week-day-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.week-hour-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.75rem;
+  color: #334155;
+}
+
+.week-hour-chip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+}
+
+.week-hour-chip button:hover {
+  color: #dc2626;
+}
+
+.week-add-hour-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.week-add-hour-btn:hover {
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.week-hour-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.week-hour-form input,
+.week-hour-form select {
+  font-size: 0.78rem;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.week-hour-form__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.week-hour-form__actions button {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 6px;
+}

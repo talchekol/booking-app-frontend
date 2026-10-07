@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import "./LoginSMS.css";
 
-const API_BASE_URL = "http://localhost:5000";
+// ראו הערה מקבילה ב-services/api.js
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export default function LoginSMS({ onLoginSuccess, businessLogoUrl }) {
   const [step, setStep] = useState(1); // 1 = טלפון, 2 = קוד SMS, 3 = הרשמה (שם ושם משפחה)
@@ -48,7 +49,7 @@ export default function LoginSMS({ onLoginSuccess, businessLogoUrl }) {
   const handleVerifySMS = async (e) => {
     e.preventDefault();
     if (!code || code.length < 4) {
-      setError("נא להזין קוד בן 4 ספרות");
+      setError("נא להזין את קוד האימות שקיבלת");
       return;
     }
 
@@ -181,11 +182,11 @@ export default function LoginSMS({ onLoginSuccess, businessLogoUrl }) {
         {step === 2 && (
           <form onSubmit={handleVerifySMS} className="sms-form">
             <div className="input-group">
-              <label className="input-label">קוד אימות (4 ספרות)</label>
+              <label className="input-label">קוד אימות</label>
               <div className="input-wrapper">
                 <input
                   type="text"
-                  maxLength="4"
+                  maxLength="6"
                   placeholder="1234"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}

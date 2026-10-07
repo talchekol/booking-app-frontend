@@ -4,9 +4,11 @@ import {
   getBusinessProfileApi,
   updateBusinessProfileApi,
 } from "../../../services/api";
+import { useToast } from "../../../context/ToastContext";
 import "./ProfileTab.css";
 
 export default function ProfileTab({ onBusinessUpdated }) {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState({
     name: "",
     address: "",
@@ -55,7 +57,7 @@ export default function ProfileTab({ onBusinessUpdated }) {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
-      alert("לא ניתן להעתיק אוטומטית, העתק ידנית: " + publicLink);
+      showToast("לא ניתן להעתיק אוטומטית - " + publicLink, "error");
     }
   };
 
@@ -75,7 +77,7 @@ export default function ProfileTab({ onBusinessUpdated }) {
       }
       setTimeout(() => setSavedSuccess(false), 2500);
     } catch (err) {
-      alert(err.message || "שגיאה בשמירה");
+      showToast(err.message || "שגיאה בשמירה", "error");
     } finally {
       setSaving(false);
     }

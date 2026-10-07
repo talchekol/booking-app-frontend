@@ -1,4 +1,6 @@
-const BASE_URL = "http://localhost:5000"; // הכתובת של שרת ה-Express שלך
+// כתובת שרת ה-Express - ב-production נקבעת ע"י משתנה הסביבה VITE_API_BASE_URL
+// (מוגדר בהגדרות הפריסה ב-Vercel), בפיתוח מקומי נופל חזרה ל-localhost אוטומטית
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 // פונקציית עזר לשליפת ה-Token מהאיחסון המקומי
 const getAuthHeaders = () => {
@@ -191,6 +193,43 @@ export const getMyBlockedDaysApi = async (date) => {
 export const getMySettingsApi = async () => {
   const res = await fetch(`${BASE_URL}/business/my/settings`, {
     headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
+// שוק ההחלפות של העסק שלי (תצוגת מנהל - כל ההצעות, בלי החרגת משתמש)
+export const getMySwapOffersApi = async () => {
+  const res = await fetch(`${BASE_URL}/business/my/swaps`, {
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
+// פרסום תורים שבועי - סטטוס: מתי פורסם לאחרונה, ומהו השבוע הקרוב שטרם פורסם
+export const getWeekPublishStatusApi = async (today) => {
+  const res = await fetch(
+    `${BASE_URL}/business/my/week-status${today ? `?today=${today}` : ""}`,
+    { headers: getAuthHeaders() },
+  );
+  return parseResponse(res);
+};
+
+// פרסום התורים לשבוע הקרוב שטרם פורסם
+export const publishWeekApi = async (today) => {
+  const res = await fetch(`${BASE_URL}/business/my/publish-week`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ today }),
+  });
+  return parseResponse(res);
+};
+
+// ביטול פרסום השבוע האחרון שפורסם (מזיז את bookingOpenUntil שבוע אחורה)
+export const unpublishWeekApi = async (today) => {
+  const res = await fetch(`${BASE_URL}/business/my/unpublish-week`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ today }),
   });
   return parseResponse(res);
 };
@@ -425,6 +464,31 @@ export const registerBusinessApi = async (payload) => {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
+  });
+  return parseResponse(res);
+};
+
+// שליפת ביקורות העסק (פתוח לכולם), מבודד לפי slug
+export const getBusinessReviewsApi = async (slug) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/reviews`);
+  return parseResponse(res);
+};
+
+// יצירת ביקורת חדשה (דורש משתמש מחובר)
+export const createReviewApi = async (slug, payload) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/reviews`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(res);
+};
+
+// מחיקת ביקורת (רק הביקורת של המשתמש המחובר עצמו)
+export const deleteReviewApi = async (slug, reviewId) => {
+  const res = await fetch(`${BASE_URL}/business/${slug}/reviews/${reviewId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
   });
   return parseResponse(res);
 };

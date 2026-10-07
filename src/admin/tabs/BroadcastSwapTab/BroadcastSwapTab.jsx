@@ -4,9 +4,10 @@ import {
   getAllBroadcastsApi,
   createBroadcastApi,
   deleteBroadcastApi,
-  fetchAvailableSwapsApi,
+  getMySwapOffersApi,
 } from "../../../services/api";
 import { extractTimeFromIso } from "../../../utils/dateUtils";
+import { useToast } from "../../../context/ToastContext";
 
 // פונקציות עזר לפירמוט נתונים מחוץ ל-JSX
 const formatBroadcastDate = (dateStr) => {
@@ -33,7 +34,8 @@ const formatSwapOfferData = (offer) => {
   };
 };
 
-export default function BroadcastSwapTab({ businessId }) {
+export default function BroadcastSwapTab() {
+  const { showToast } = useToast();
   const [broadcastText, setBroadcastText] = useState("");
   const [broadcastHistory, setBroadcastHistory] = useState([]);
   const [swapOffers, setSwapOffers] = useState([]);
@@ -44,7 +46,7 @@ export default function BroadcastSwapTab({ businessId }) {
     try {
       const [broadcasts, swaps] = await Promise.all([
         getAllBroadcastsApi().catch(() => []),
-        fetchAvailableSwapsApi(businessId).catch(() => []),
+        getMySwapOffersApi().catch(() => []),
       ]);
       setBroadcastHistory(broadcasts || []);
       setSwapOffers(swaps || []);
@@ -57,7 +59,7 @@ export default function BroadcastSwapTab({ businessId }) {
 
   useEffect(() => {
     loadData();
-  }, [businessId]);
+  }, []);
 
   const handleSendBroadcast = async () => {
     if (!broadcastText.trim()) return;
@@ -65,9 +67,9 @@ export default function BroadcastSwapTab({ businessId }) {
       const newBroadcast = await createBroadcastApi(broadcastText.trim());
       setBroadcastHistory((prev) => [newBroadcast, ...prev]);
       setBroadcastText("");
-      alert("הודעת המערכת שודרה בהצלחה לכל הלקוחות!");
+      showToast("הודעת המערכת שודרה בהצלחה לכל הלקוחות!", "success");
     } catch (err) {
-      alert(err.message || "שגיאה בשידור הודעה");
+      showToast(err.message || "שגיאה בשידור הודעה", "error");
     }
   };
 
@@ -76,7 +78,7 @@ export default function BroadcastSwapTab({ businessId }) {
       await deleteBroadcastApi(id);
       setBroadcastHistory((prev) => prev.filter((b) => b.id !== id));
     } catch (err) {
-      alert("שגיאה במחיקת הודעה");
+      showToast("שגיאה במחיקת הודעה", "error");
     }
   };
 
