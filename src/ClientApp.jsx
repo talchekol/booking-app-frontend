@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import LoginSMS from "./components/LoginSMS/LoginSMS";
 import Home from "./components/Home/Home";
 import SelectService from "./components/SelectService/SelectService";
@@ -93,10 +93,18 @@ export default function ClientApp({ user, setUser, onLogout }) {
     };
   }, [user]);
 
+  // שומר נגד race condition: כשעוברים בין עסקים מהר, יכולות להיות כמה
+  // בקשות "באוויר" בו-זמנית (אחת לעסק הישן, אחת לחדש) - אם התשובה הישנה
+  // מגיעה אחרי החדשה, היא תדרוס אותה עם נתונים של העסק הלא נכון. הרפרנס
+  // הזה מזהה את הבקשה "העדכנית ביותר שנשלחה", ומתעלם מכל תשובה שאינה שלה
+  const latestRequestRef = useRef(0);
+
   const loadAppointments = async () => {
+    const requestId = ++latestRequestRef.current;
     setLoadingAppts(true);
     try {
       const data = await getMyAppointmentsApi(businessId);
+      if (requestId !== latestRequestRef.current) return; // בקשה ישנה - מתעלמים
       // השרת מחזיר אובייקט עם upcoming ו-history, מסונן לעסק הנוכחי בלבד
       // (businessId מועבר כפרמטר) - כדי שתור קרוב יותר אצל עסק אחר לא "ידחוק"
       // בתצוגה את התור של המשתמש בעסק שבו הוא נמצא כרגע
@@ -105,7 +113,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
     } catch (err) {
       console.error("שגיאה בטעינת תורים מהשרת:", err);
     } finally {
-      setLoadingAppts(false);
+      if (requestId === latestRequestRef.current) setLoadingAppts(false);
     }
   };
 
