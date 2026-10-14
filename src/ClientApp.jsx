@@ -91,7 +91,11 @@ export default function ClientApp({ user, setUser, onLogout }) {
       window.removeEventListener("focus", handleFocusRefresh);
       document.removeEventListener("visibilitychange", handleFocusRefresh);
     };
-  }, [user]);
+    // businessId בתלויות בכוונה: בלעדיו ה-closure של handleFocusRefresh
+    // "נתקע" עם ה-loadAppointments של העסק שהיה פעיל כשהמאזין נרשם לראשונה -
+    // אחרי מעבר לעסק אחר (ניווט בתוך ה-SPA, בלי רענון מלא), חזרה לפוקוס/טאב
+    // הייתה מריצה מחדש fetch עם ה-businessId הישן ודורסת את הנתונים הנכונים
+  }, [user, businessId]);
 
   // שומר נגד race condition: כשעוברים בין עסקים מהר, יכולות להיות כמה
   // בקשות "באוויר" בו-זמנית (אחת לעסק הישן, אחת לחדש) - אם התשובה הישנה
