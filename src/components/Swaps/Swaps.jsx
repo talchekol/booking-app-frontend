@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   RefreshCw,
   Clock,
@@ -113,6 +113,15 @@ export default function Swaps({
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
+  // שומר תמיד את הבקשות היוצאות האחרונות שנטענו - נקרא בתוך loadMarketSwaps
+  // כדי לזהות "התפתרה אצל הצד השני" (ראו למטה). משתמשים ב-ref ולא בקריאה
+  // ישירה ל-state כדי להימנע מבעיית closure מיושן כש-loadMarketSwaps נקרא
+  // מתוך ה-polling interval למטה (אותה בעיה שתוקנה ב-ClientApp.jsx)
+  const outgoingRequestsRef = useRef([]);
+  useEffect(() => {
+    outgoingRequestsRef.current = outgoingRequests;
+  }, [outgoingRequests]);
+
   const loadMarketSwaps = async () => {
     setLoading(true);
     try {
@@ -124,9 +133,29 @@ export default function Swaps({
       setIncomingRequests(
         Array.isArray(requests?.incoming) ? requests.incoming : [],
       );
-      setOutgoingRequests(
-        Array.isArray(requests?.outgoing) ? requests.outgoing : [],
+
+      const newOutgoing = Array.isArray(requests?.outgoing)
+        ? requests.outgoing
+        : [];
+
+      // זיהוי בקשה יוצאת שהייתה "ממתינה" בטעינה הקודמת וכבר אינה כזו עכשיו -
+      // כלומר הצד השני אישר/דחה אותה ברקע. במקרה כזה צריך לרענן גם את התור
+      // בפועל אצל שולח הבקשה (onSwapChanged), לא רק את רשימת ההחלפות
+      const previouslyPendingIds = outgoingRequestsRef.current
+        .filter((r) => r.status === "PENDING")
+        .map((r) => r.id);
+      const stillPendingIds = newOutgoing
+        .filter((r) => r.status === "PENDING")
+        .map((r) => r.id);
+      const resolvedElsewhere = previouslyPendingIds.some(
+        (id) => !stillPendingIds.includes(id),
       );
+
+      setOutgoingRequests(newOutgoing);
+
+      if (resolvedElsewhere && onSwapChanged) {
+        onSwapChanged();
+      }
     } catch (err) {
       console.error("שגיאה בטעינת נתוני שוק ההחלפות:", err);
       setAvailableSwaps([]);
@@ -140,6 +169,18 @@ export default function Swaps({
   useEffect(() => {
     loadMarketSwaps();
   }, [myAppointment?.isUpForSwap, pendingSwapId, businessId]);
+
+  // Polling: כל עוד יש בקשת החלפה יוצאת שממתינה לאישור, בודקים כל 12 שניות
+  // אם הצד השני כבר הגיב - כדי שמי ששלח את הבקשה יראה עדכון בלי לצאת
+  // ולחזור לאפליקציה. רץ רק כשיש בקשה ממתינה בפועל, לא תמיד לכולם
+  const hasPendingOutgoing = outgoingRequests.some(
+    (r) => r.status === "PENDING",
+  );
+  useEffect(() => {
+    if (!hasPendingOutgoing) return;
+    const intervalId = setInterval(loadMarketSwaps, 12000);
+    return () => clearInterval(intervalId);
+  }, [hasPendingOutgoing, businessId]);
 
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);
