@@ -47,8 +47,9 @@ export const verifySmsCode = async (phone, code) => {
 };
 
 // 2. ניהול תורים
-export const getMyAppointmentsApi = async () => {
-  const res = await fetch(`${BASE_URL}/appointments/my`, {
+export const getMyAppointmentsApi = async (businessId) => {
+  const query = businessId ? `?businessId=${businessId}` : "";
+  const res = await fetch(`${BASE_URL}/appointments/my${query}`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);

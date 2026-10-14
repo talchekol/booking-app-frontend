@@ -71,7 +71,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
     if (user) {
       loadAppointments();
     }
-  }, [user]);
+  }, [user, businessId]);
 
   // 👈 רענון התורים כשחוזרים לטאב/לחלון - כדי שהצד שקיבל את ההחלפה
   // (ולא ביצע בעצמו פעולה) יראה את השינוי בלי צורך ברענון ידני של הדף
@@ -96,8 +96,10 @@ export default function ClientApp({ user, setUser, onLogout }) {
   const loadAppointments = async () => {
     setLoadingAppts(true);
     try {
-      const data = await getMyAppointmentsApi();
-      // השרת מחזיר אובייקט עם upcoming ו-history (חוצה-עסקים בכוונה - ראו MyAppointments)
+      const data = await getMyAppointmentsApi(businessId);
+      // השרת מחזיר אובייקט עם upcoming ו-history, מסונן לעסק הנוכחי בלבד
+      // (businessId מועבר כפרמטר) - כדי שתור קרוב יותר אצל עסק אחר לא "ידחוק"
+      // בתצוגה את התור של המשתמש בעסק שבו הוא נמצא כרגע
       setUpcomingAppointment(data.upcoming || null);
       setAppointmentsHistory(data.history || []);
     } catch (err) {
