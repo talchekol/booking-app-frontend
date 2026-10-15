@@ -621,6 +621,14 @@ export default function CalendarTab({ services = [], providers = [] }) {
             const providerName =
               apt.provider?.name || (isBlock ? "כל הספרים" : "—");
 
+            // טלפון הלקוח - לא מוצג בחסימות, ולא כשזה placeholder פנימי
+            // שנוצר לתור ידני בלי טלפון אמיתי (ראו createManualAppointment,
+            // walkin-${Date.now()})
+            const clientPhone =
+              !isBlock && apt.user?.phone && !apt.user.phone.startsWith("walkin-")
+                ? apt.user.phone
+                : null;
+
             return (
               <div
                 key={apt.id}
@@ -637,6 +645,9 @@ export default function CalendarTab({ services = [], providers = [] }) {
                 </div>
                 <div className="apt-info">
                   <div className="apt-client">{clientName}</div>
+                  {clientPhone && (
+                    <div className="apt-phone">{clientPhone}</div>
+                  )}
                   <div className="apt-service">
                     {apt.service?.name || "תספורת"}
                   </div>

@@ -119,6 +119,13 @@
   color: #8a8794;
 }
 
+.apt-phone {
+  font-size: 12px;
+  color: #8a8794;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
 .apt-provider {
   display: flex;
   align-items: center;
