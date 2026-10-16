@@ -46,6 +46,16 @@ export const verifySmsCode = async (phone, code) => {
   return parseResponse(res);
 };
 
+// חידוש טוקן (sliding session) - נקרא בשקט ברקע, מאריך את תוקף ההתחברות
+// ב-30 יום נוספים מבלי שהמשתמש יצטרך להזין קוד SMS מחדש
+export const refreshTokenApi = async () => {
+  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+};
+
 // 2. ניהול תורים
 export const getMyAppointmentsApi = async (businessId) => {
   const query = businessId ? `?businessId=${businessId}` : "";

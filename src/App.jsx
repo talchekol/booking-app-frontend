@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminApp from "./AdminApp";
 import ClientApp from "./ClientApp";
@@ -6,6 +6,7 @@ import RegisterBusiness from "./RegisterBusiness";
 import LandingPage from "./LandingPage";
 import { TenantProvider } from "./context/TenantContext";
 import { ToastProvider } from "./context/ToastContext";
+import { refreshTokenApi } from "./services/api";
 import "./App.css";
 
 export default function App() {
@@ -24,6 +25,44 @@ export default function App() {
     localStorage.removeItem("user");
     setUser(null);
   };
+
+  // חידוש טוקן בשקט (sliding session) - בכל פעם שהאפליקציה נטענת, או
+  // חוזרת לפוקוס אחרי שהייתה ברקע, מאריכים את תוקף ההתחברות ב-30 יום
+  // נוספים מהרגע הזה. ככה משתמש פעיל כמעט ולא רואה מסך login מחדש, בעוד
+  // שמכשיר שלא נעשה בו שימוש פשוט מפסיק להתחדש ונחסם אחרי 30 יום כרגיל -
+  // ראו גם auth.js controller (refreshToken) בבקאנד
+  useEffect(() => {
+    if (!user) return;
+
+    const refresh = async () => {
+      try {
+        const data = await refreshTokenApi();
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setUser(data.user);
+      } catch (err) {
+        // הטוקן כבר לא תקין/פג תוקף - מנתקים בשקט
+        handleLogout();
+      }
+    };
+
+    refresh();
+
+    const handleFocusRefresh = () => {
+      if (document.visibilityState === "visible") {
+        refresh();
+      }
+    };
+    window.addEventListener("focus", handleFocusRefresh);
+    document.addEventListener("visibilitychange", handleFocusRefresh);
+
+    return () => {
+      window.removeEventListener("focus", handleFocusRefresh);
+      document.removeEventListener("visibilitychange", handleFocusRefresh);
+    };
+    // תלות ב-user?.id בלבד (לא באובייקט user כולו) - אחרת כל חידוש מוצלח
+    // (שקורא ל-setUser) היה מפעיל מחדש את ה-effect הזה בלולאה אינסופית
+  }, [user?.id]);
 
   return (
     <ToastProvider>
