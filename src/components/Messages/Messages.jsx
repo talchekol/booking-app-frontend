@@ -46,6 +46,11 @@ const formatOutgoingItem = (req) => ({
   ownerName: req.owner?.firstName || "הצד השני",
 });
 
+const formatBroadcastDate = (dateStr) => {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("he-IL");
+};
+
 export default function Messages({ onAppointmentUpdated }) {
   const { slug } = useTenant();
   const { showToast } = useToast();
@@ -54,7 +59,7 @@ export default function Messages({ onAppointmentUpdated }) {
     incoming: [],
     outgoing: [],
   });
-  const [broadcastNotice, setBroadcastNotice] = useState(null);
+  const [broadcastNotices, setBroadcastNotices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
@@ -63,10 +68,10 @@ export default function Messages({ onAppointmentUpdated }) {
     try {
       const [swapsData, broadcastData] = await Promise.all([
         getMySwapRequestsApi().catch(() => ({ incoming: [], outgoing: [] })),
-        getActiveBroadcastApi(slug).catch(() => null),
+        getActiveBroadcastApi(slug).catch(() => []),
       ]);
       setSwapRequests(swapsData || { incoming: [], outgoing: [] });
-      setBroadcastNotice(broadcastData);
+      setBroadcastNotices(Array.isArray(broadcastData) ? broadcastData : []);
     } catch (err) {
       console.error("Error loading messages:", err);
     } finally {
@@ -139,7 +144,7 @@ export default function Messages({ onAppointmentUpdated }) {
         >
           <Bell size={16} />
           <span>התראות מערכת</span>
-          {broadcastNotice && <span className="incoming-dot" />}
+          {broadcastNotices.length > 0 && <span className="incoming-dot" />}
         </button>
       </div>
 
@@ -255,20 +260,25 @@ export default function Messages({ onAppointmentUpdated }) {
 
       {activeTab === "system" && (
         <div className="messages-list">
-          {broadcastNotice ? (
-            <div className="message-card unread">
-              <div className="message-icon-wrapper broadcast">
-                <Megaphone size={20} />
-              </div>
-              <div className="message-body">
-                <div className="message-title-row">
-                  <span className="message-item-title">
-                    הודעת מערכת מהמספרה ✂️
-                  </span>
+          {broadcastNotices.length > 0 ? (
+            broadcastNotices.map((notice) => (
+              <div key={notice.id} className="message-card unread">
+                <div className="message-icon-wrapper broadcast">
+                  <Megaphone size={20} />
                 </div>
-                <p className="message-text">{broadcastNotice.message}</p>
+                <div className="message-body">
+                  <div className="message-title-row">
+                    <span className="message-item-title">
+                      הודעת מערכת מהמספרה ✂️
+                    </span>
+                    <span className="message-time">
+                      {formatBroadcastDate(notice.createdAt)}
+                    </span>
+                  </div>
+                  <p className="message-text">{notice.message}</p>
+                </div>
               </div>
-            </div>
+            ))
           ) : (
             <p className="no-messages">אין התראות מערכת פעילות כרגע.</p>
           )}
