@@ -62,7 +62,9 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
                 )}
                 <div className="barber-details">
                   <span className="barber-title">{barber.name}</span>
-                  <span className="barber-subtitle">ספר מוסמך</span>
+                  <span className="barber-subtitle">
+                    {barber.description || "ספר מוסמך"}
+                  </span>
                 </div>
               </div>
 

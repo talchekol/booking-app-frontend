@@ -23,7 +23,11 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
 
   // פונקציות לניהול שירותים
   const [addingProvider, setAddingProvider] = useState(false);
-  const [newProvider, setNewProvider] = useState({ name: "", imageUrl: "" });
+  const [newProvider, setNewProvider] = useState({
+    name: "",
+    imageUrl: "",
+    description: "",
+  });
 
   // מודל אישור אחיד למחיקת שירות/הסרת ספר - { type: "service" | "provider", id }
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -50,23 +54,24 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
     setPendingDelete({ type: "service", id });
   };
 
-  //פונקציה לשמירת ספר חדש
+  //פונקציה לשמירת איש צוות חדש
   const handleSaveProvider = async () => {
     if (!newProvider.name) return;
     try {
       await createProviderApi({
         name: newProvider.name,
         imageUrl: newProvider.imageUrl || undefined,
+        description: newProvider.description || undefined,
       });
       setAddingProvider(false);
-      setNewProvider({ name: "", imageUrl: "" });
+      setNewProvider({ name: "", imageUrl: "", description: "" });
       onUpdate();
     } catch (err) {
-      showToast("שגיאה בהוספת ספר", "error");
+      showToast("שגיאה בהוספת איש צוות", "error");
     }
   };
 
-  //פונקציה להסרת ספר
+  //פונקציה להסרת איש צוות
   const handleDeleteProvider = (id) => {
     setPendingDelete({ type: "provider", id });
   };
@@ -86,7 +91,7 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
       showToast(
         type === "service"
           ? "שגיאה במחיקת שירות (ייתכן שתלויים בו תורים)"
-          : "שגיאה בהסרת ספר",
+          : "שגיאה בהסרת איש צוות",
         "error",
       );
     }
@@ -182,14 +187,14 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
               onClick={() => setAddingProvider(!addingProvider)}
               className="btn-small-primary"
             >
-              + ספר
+              + איש צוות
             </button>
           </div>
 
           {addingProvider && (
             <div className="sub-form">
               <input
-                placeholder="שם ספר"
+                placeholder="שם איש צוות"
                 value={newProvider.name}
                 onChange={(e) =>
                   setNewProvider({ ...newProvider, name: e.target.value })
@@ -203,6 +208,18 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
                   setNewProvider({ ...newProvider, imageUrl: e.target.value })
                 }
                 className="admin-input"
+              />
+              <textarea
+                placeholder="תיאור (אופציונלי) - יוצג גם ללקוח"
+                value={newProvider.description}
+                onChange={(e) =>
+                  setNewProvider({
+                    ...newProvider,
+                    description: e.target.value,
+                  })
+                }
+                className="admin-input"
+                rows={3}
               />
               <div className="form-actions">
                 <button onClick={handleSaveProvider} className="btn-primary">
@@ -230,8 +247,11 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
                 >
                   {p.name.slice(0, 1)}
                 </div>
-                <div className="item-name" style={{ flex: 1 }}>
-                  {p.name}
+                <div className="item-details" style={{ flex: 1 }}>
+                  <div className="item-name">{p.name}</div>
+                  {p.description && (
+                    <div className="item-sub">{p.description}</div>
+                  )}
                 </div>
                 <button
                   onClick={() => handleDeleteProvider(p.id)}
@@ -248,12 +268,12 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
       <ConfirmDialog
         open={!!pendingDelete}
         title={
-          pendingDelete?.type === "service" ? "מחיקת שירות" : "הסרת ספר"
+          pendingDelete?.type === "service" ? "מחיקת שירות" : "הסרת איש צוות"
         }
         message={
           pendingDelete?.type === "service"
             ? "האם למחוק שירות זה? הפעולה בלתי הפיכה."
-            : "האם להסיר ספר זה מהצוות? הפעולה בלתי הפיכה."
+            : "האם להסיר איש צוות זה? הפעולה בלתי הפיכה."
         }
         confirmText={pendingDelete?.type === "service" ? "מחק" : "הסר"}
         onConfirm={handleConfirmDelete}
