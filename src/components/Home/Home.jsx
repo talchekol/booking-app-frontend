@@ -363,7 +363,7 @@ export default function Home({
                 upcomingAppt.imageUrl ||
                 "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
               }
-              alt={upcomingAppt.provider?.name || "ספר"}
+              alt={upcomingAppt.provider?.name || "איש צוות"}
               className="barber-image"
             />
             <div className="appt-details">

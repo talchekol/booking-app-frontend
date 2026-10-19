@@ -335,7 +335,7 @@ export default function WeeklyPublishTab({ providers = [] }) {
                           setHourForm({ ...hourForm, providerId: e.target.value })
                         }
                       >
-                        <option value="">כל הספרים</option>
+                        <option value="">כל הצוות</option>
                         {providers.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}

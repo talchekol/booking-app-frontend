@@ -16,7 +16,7 @@ const getServiceName = (appt) =>
 const getBarberName = (appt) =>
   appt?.provider?.name ||
   appt?.barber?.name ||
-  (typeof appt?.barber === "string" ? appt.barber : "ספר");
+  (typeof appt?.barber === "string" ? appt.barber : "איש צוות");
 
 const getImageUrl = (appt) =>
   appt?.provider?.imageUrl ||

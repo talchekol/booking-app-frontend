@@ -48,7 +48,7 @@ export default function AdminDashboard({
       setServices(svcData || []);
       setProviders(provData || []);
     } catch (err) {
-      console.error("שגיאה בטעינת שירותים/ספרים:", err.message);
+      console.error("שגיאה בטעינת שירותים/אנשי צוות:", err.message);
     }
   };
 

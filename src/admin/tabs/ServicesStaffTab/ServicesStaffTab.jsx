@@ -29,7 +29,7 @@ export default function ServicesStaffTab({ services, providers, onUpdate }) {
     description: "",
   });
 
-  // מודל אישור אחיד למחיקת שירות/הסרת ספר - { type: "service" | "provider", id }
+  // מודל אישור אחיד למחיקת שירות/הסרת איש צוות - { type: "service" | "provider", id }
   const [pendingDelete, setPendingDelete] = useState(null);
 
   //פונקציה לשמירת שירות חדש

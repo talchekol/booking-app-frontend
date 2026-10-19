@@ -158,7 +158,7 @@ export default function SelectDateTime({
           return (appointments || []).some((apt) => {
             if (apt.status === "CANCELLED") return false;
 
-            // חסימה שרלוונטית אם היא מוגדרת לכל הספרים (null) או לספר הנבחר בלבד
+            // חסימה שרלוונטית אם היא מוגדרת לכל הצוות (null) או לאיש הצוות הנבחר בלבד
             if (apt.providerId && providerId && apt.providerId !== providerId) {
               return false;
             }

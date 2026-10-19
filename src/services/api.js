@@ -167,7 +167,7 @@ export const rejectSwapRequestApi = async (requestId) => {
 // 4. שירותי ניהול עסק (Admin & Public Data)
 // ==========================================
 
-// שליפת שירותים/ספרים של העסק שלי (מזוהה מהטוקן - לשימוש בפאנל הניהול)
+// שליפת שירותים/אנשי צוות של העסק שלי (מזוהה מהטוקן - לשימוש בפאנל הניהול)
 export const getMyServicesApi = async () => {
   const res = await fetch(`${BASE_URL}/business/my/services`, {
     headers: getAuthHeaders(),
@@ -251,7 +251,7 @@ export const getPublicServicesApi = async (slug) => {
   return parseResponse(res);
 };
 
-// שליפת רשימת ספרים (פתוח לכולם - גם ל-SelectBarber), מבודד לפי slug
+// שליפת רשימת אנשי צוות (פתוח לכולם - גם ל-SelectBarber), מבודד לפי slug
 export const getPublicProvidersApi = async (slug) => {
   const res = await fetch(`${BASE_URL}/business/${slug}/providers`);
   return parseResponse(res);
@@ -370,7 +370,7 @@ export const deleteServiceApi = async (serviceId) => {
   return parseResponse(res);
 };
 
-// הוספת ספר לצוות
+// הוספת איש צוות
 export const createProviderApi = async (payload) => {
   const res = await fetch(`${BASE_URL}/business/providers`, {
     method: "POST",
@@ -380,7 +380,7 @@ export const createProviderApi = async (payload) => {
   return parseResponse(res);
 };
 
-// מחיקת ספר מהצוות
+// מחיקת איש צוות
 export const deleteProviderApi = async (providerId) => {
   const res = await fetch(`${BASE_URL}/business/providers/${providerId}`, {
     method: "DELETE",

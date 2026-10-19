@@ -17,7 +17,7 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
         const data = await getPublicProvidersApi(slug);
         setBarbers(data || []);
       } catch (err) {
-        console.error("שגיאה בטעינת ספרים:", err);
+        console.error("שגיאה בטעינת אנשי צוות:", err);
       } finally {
         setLoading(false);
       }
@@ -33,14 +33,14 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
         <button onClick={onBack} className="back-btn" title="חזור">
           <ChevronRight size={22} />
         </button>
-        <h2 className="screen-title">בחר ספר</h2>
+        <h2 className="screen-title">בחר איש צוות</h2>
         <div className="header-placeholder"></div>
       </div>
 
-      {/* 2. רשימת הספרים */}
+      {/* 2. רשימת אנשי הצוות */}
       <div className="barbers-list">
         {loading ? (
-          <div className="empty-state">טוען ספרים...</div>
+          <div className="empty-state">טוען אנשי צוות...</div>
         ) : barbers.length > 0 ? (
           barbers.map((barber) => (
             <div
@@ -63,7 +63,7 @@ export default function SelectBarber({ onSelectBarber, onBack }) {
                 <div className="barber-details">
                   <span className="barber-title">{barber.name}</span>
                   <span className="barber-subtitle">
-                    {barber.description || "ספר מוסמך"}
+                    {barber.description || "איש צוות מקצועי"}
                   </span>
                 </div>
               </div>

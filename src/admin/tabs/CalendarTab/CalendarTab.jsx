@@ -411,7 +411,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
               }
               className="admin-input"
             >
-              <option value="">בחר ספר</option>
+              <option value="">בחר איש צוות</option>
               {providers.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -458,7 +458,7 @@ export default function CalendarTab({ services = [], providers = [] }) {
               }
               className="admin-input"
             >
-              <option value="">כל הספרים</option>
+              <option value="">כל הצוות</option>
               {providers.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -617,9 +617,9 @@ export default function CalendarTab({ services = [], providers = [] }) {
                 ? `${apt.user.firstName} ${apt.user.lastName || ""}`.trim()
                 : "לקוח מזדמן";
 
-            // אם בחסימה לא הוגדר ספר ספציפי, יוצג "כל הספרים"
+            // אם בחסימה לא הוגדר איש צוות ספציפי, יוצג "כל הצוות"
             const providerName =
-              apt.provider?.name || (isBlock ? "כל הספרים" : "—");
+              apt.provider?.name || (isBlock ? "כל הצוות" : "—");
 
             // טלפון הלקוח - לא מוצג בחסימות, ולא כשזה placeholder פנימי
             // שנוצר לתור ידני בלי טלפון אמיתי (ראו createManualAppointment,

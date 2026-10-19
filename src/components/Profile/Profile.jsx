@@ -30,7 +30,10 @@ export default function Profile({ user, onLogout }) {
         </div>
       </div>
 
-      {/* 2. הגדרות התראות והעדפות */}
+      {/* 2. הגדרות התראות והעדפות - מוסתר זמנית: אין עדיין מנגנון אמיתי
+      שמחובר למתגים האלה (לא שולח שום תזכורת/התראה בפועל). משאירים את הקוד
+      כמו שהוא לקראת חיבור עתידי להתראות אמיתיות בטלפון, רק לא מציגים
+      למשתמש הבטחה על פיצ'ר שעדיין לא קיים.
       <div className="settings-section">
         <div className="section-title-text">הגדרות והתראות</div>
 
@@ -70,6 +73,7 @@ export default function Profile({ user, onLogout }) {
           </label>
         </div>
       </div>
+      */}
 
       {/* 3. כפתור התנתקות */}
       <button onClick={onLogout} className="logout-button">

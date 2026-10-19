@@ -30,7 +30,7 @@ const formatSwapOfferData = (offer) => {
   return {
     id: offer.id,
     title: `${clientName} · ${serviceName}`,
-    subtitle: `${time} · ${date} (ספר: ${providerName})`,
+    subtitle: `${time} · ${date} (איש צוות: ${providerName})`,
   };
 };
 

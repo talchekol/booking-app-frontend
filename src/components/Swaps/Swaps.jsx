@@ -51,7 +51,7 @@ const getUserDisplayName = (user) => {
 const formatMyOffer = (appt) => {
   if (!appt) return null;
   const service = appt.service?.name || "תספורת";
-  const barber = appt.provider?.name || appt.barber?.name || "ספר";
+  const barber = appt.provider?.name || appt.barber?.name || "איש צוות";
   return {
     title: `${service} (עם ${barber})`,
     timeDisplay: `${formatApptDate(appt.dateTime)} בשעה ${formatApptTime(appt.dateTime)}`,

@@ -78,7 +78,7 @@ export default function ConfirmScreen({
                   <User size={20} />
                 </div>
                 <div className="summary-details">
-                  <span className="summary-label">ספר / נותן שירות</span>
+                  <span className="summary-label">איש צוות / נותן שירות</span>
                   <span className="summary-value">{data.barber?.name}</span>
                 </div>
               </div>

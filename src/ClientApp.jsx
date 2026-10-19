@@ -127,7 +127,7 @@ export default function ClientApp({ user, setUser, onLogout }) {
     setBookingStep("select-barber");
   };
 
-  // 2. שמירת ספר ומעבר לבחירת תאריך ושעה
+  // 2. שמירת איש צוות ומעבר לבחירת תאריך ושעה
   const handleSelectBarber = (barber) => {
     setSelectedBookingData((prev) => ({ ...prev, barber }));
     setBookingStep("select-datetime");
@@ -357,9 +357,6 @@ export default function ClientApp({ user, setUser, onLogout }) {
           <div className="success-screen-container">
             <CheckCircle2 size={80} className="success-icon" />
             <h1 className="success-title">התור נקבע בהצלחה!</h1>
-            <p className="success-description">
-              נשלח אליך אישור והתראה לפני התור.
-            </p>
 
             <button
               onClick={() => setBookingStep("home")}
