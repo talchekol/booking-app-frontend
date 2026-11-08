@@ -170,17 +170,38 @@ export default function Swaps({
     loadMarketSwaps();
   }, [myAppointment?.isUpForSwap, pendingSwapId, businessId]);
 
-  // Polling: כל עוד יש בקשת החלפה יוצאת שממתינה לאישור, בודקים כל 12 שניות
-  // אם הצד השני כבר הגיב - כדי שמי ששלח את הבקשה יראה עדכון בלי לצאת
-  // ולחזור לאפליקציה. רץ רק כשיש בקשה ממתינה בפועל, לא תמיד לכולם
+  // האם המסך מוצג בפועל למשתמש (לא לשונית ברקע / טלפון נעול)
+  const [isPageVisible, setIsPageVisible] = useState(
+    () => document.visibilityState === "visible",
+  );
+  useEffect(() => {
+    const handleVisibility = () =>
+      setIsPageVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
+  // Polling: רץ רק כששלושת התנאים מתקיימים יחד -
+  // 1. המשתמש נמצא במסך ההחלפות (הקומפוננטה מוצגת רק כש-currentTab === "swaps"
+  //    ב-ClientApp, ויציאה מהמסך מבטלת את ה-interval דרך ה-cleanup)
+  // 2. יש לו בקשת החלפה יוצאת שממתינה לאישור
+  // 3. הדף גלוי בפועל - בלשונית ברקע / מסך נעול אין polling בכלל
+  // כשהדף חוזר להיות גלוי מבצעים טעינה מיידית אחת, כדי לא לחכות 12 שניות
   const hasPendingOutgoing = outgoingRequests.some(
     (r) => r.status === "PENDING",
   );
+  const shouldPoll = hasPendingOutgoing && isPageVisible;
+  const wasVisibleRef = useRef(isPageVisible);
   useEffect(() => {
-    if (!hasPendingOutgoing) return;
+    const becameVisible = isPageVisible && !wasVisibleRef.current;
+    wasVisibleRef.current = isPageVisible;
+
+    if (!shouldPoll) return;
+    if (becameVisible) loadMarketSwaps();
     const intervalId = setInterval(loadMarketSwaps, 12000);
     return () => clearInterval(intervalId);
-  }, [hasPendingOutgoing, businessId]);
+  }, [shouldPoll, isPageVisible, businessId]);
 
   const handleApprove = async (requestId) => {
     setActionLoadingId(requestId);
